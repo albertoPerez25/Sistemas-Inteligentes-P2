@@ -1,0 +1,11 @@
+{"address": "Test", "distance": 250, "initial": 1, "final": 5, 
+"intersections": [{"identifier": 1, "longitude": 4, "latitude": 0},
+{"identifier": 2, "longitude": 2, "latitude": 2},
+{"identifier": 3, "longitude": 7, "latitude": 4},
+{"identifier": 4, "longitude": 4, "latitude": 4},
+{"identifier": 5, "longitude": 4, "latitude": 6}]
+,"segments": [{ "origin": 1,"destination": 2,"distance":7,"speed":1},
+{ "origin": 1,"destination": 3,"distance":9,"speed":1},
+{ "origin": 2,"destination": 4,"distance":6,"speed":1},
+{ "origin": 3,"destination": 4,"distance":2,"speed":1},
+{ "origin": 4,"destination": 5,"distance":10,"speed":1}]}
