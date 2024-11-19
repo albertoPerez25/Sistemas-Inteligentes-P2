@@ -19,8 +19,8 @@ class Busqueda(ABC):
 
     def expandir(self,nodo,problema):
         acciones = problema.getAccionesDe(nodo.estado.identifier)
-        while not acciones.empty():            
-            accion = acciones.get()
+        while not len(acciones) == 0:            
+            accion = acciones.pop() # Cambiado a pop porque ahora es una lista segmentos
             sucesor = Nodo(problema.getEstado(accion.destination))
             sucesor.padre = nodo
             sucesor.accion = accion

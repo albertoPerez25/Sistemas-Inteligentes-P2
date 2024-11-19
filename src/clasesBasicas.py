@@ -55,18 +55,20 @@ class Problema:
         # Pasamos las intersecciones del JSON a un nuevo diccionario estados
         for inter in self.data['intersections']:
             self.dic_estados.update({inter['identifier']:(Estado(inter['identifier'], inter['latitude'], inter['longitude']))})         
-            self.dic_acciones.update({inter['identifier']:PriorityQueue()})  # Acciones = {id:PriorityQueue de Acciones}
+            self.dic_acciones.update({inter['identifier']:[]})  # Acciones = {id:Lista de Acciones}
             
+        #QUITAMOS INICIAL Y FINAL YO NO ESTAN EN EL JSON
         # Cargamos los nodos iniciales y finales del JSON.
-        self.Inicial = self.dic_estados[self.data["initial"]]
-        self.Final = self.dic_estados[self.data["final"]]
+        #self.Inicial = self.dic_estados[self.data["initial"]]
+        #self.Final = self.dic_estados[self.data["final"]]
         
-        # Pasamos los segmentos del JSON a un nuevo diccionario acciones     
-        for seg in self.data['segments']:
+        # Pasamos los segmentos del JSON a un nuevo diccionario acciones   
+        segOrd = self.data['segments'].sort(); #Ordenamos la  
+        for seg in segOrd:
             if (seg['speed']*(10/36) > self.maxSpeed):
                 self.maxSpeed = seg['speed']*(10/36) # km/h -> m/s
             accion=Accion(seg['origin'], seg['destination'], seg['distance'], seg['speed'])
-            self.dic_acciones[seg['origin']].put(accion)  # Metemos las acciones de cada Estado en una PriorityQueue
+            self.dic_acciones[seg['origin']]=accion  # Metemos las acciones de cada Estado en una lista ordenada
 
     # Obtener un objeto Estado a partir de su ID
     def getEstado(self, id):
