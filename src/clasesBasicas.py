@@ -42,6 +42,13 @@ class Accion:
     def __lt__(self, otro):
         return self.destination < otro.destination
     
+
+class Candidato:
+    def __init__(self, identifier, population):
+        self.identifier = identifier
+        self.population = population
+    
+
 class Problema:   
     #Constructor de Problema
     def __init__(self,ruta):
@@ -51,6 +58,7 @@ class Problema:
         self.dic_estados = {}
         self.dic_acciones = {}
         self.maxSpeed = 0
+        self.list_candidatos = self.data['candidates']
 
         # Pasamos las intersecciones del JSON a un nuevo diccionario estados
         for inter in self.data['intersections']:
@@ -69,6 +77,9 @@ class Problema:
                 self.maxSpeed = seg['speed']*(10/36) # km/h -> m/s
             accion=Accion(seg['origin'], seg['destination'], seg['distance'], seg['speed'])
             self.dic_acciones[seg['origin']]=accion  # Metemos las acciones de cada Estado en una lista ordenada
+
+        for cand in self.data['candidates']:
+            self.list_candidatos.append(cand)
 
     # Obtener un objeto Estado a partir de su ID
     def getEstado(self, id):
