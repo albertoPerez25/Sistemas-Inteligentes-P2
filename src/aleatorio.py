@@ -18,6 +18,7 @@ class aleatorio:
         #random 1
         #elegido = random.choice(candidatos)
         soluciones = [0] * len(candidatos)
+        fitness = [0] * len(candidatos)
         mejorSol = 99999999
         mejorPos = 0
         #
@@ -37,6 +38,7 @@ class aleatorio:
             #
         #Indicamos que es solucion:
         soluciones[mejorPos] = 1 #misma longitud que candidatos
+        fitness[mejorPos] = mejorSol
         return soluciones
     #devuelve uno 
 problema = Problema(RUTAJSON)
