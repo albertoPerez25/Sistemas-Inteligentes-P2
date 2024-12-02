@@ -18,16 +18,17 @@ h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 class evolutivoMALHECHO:
     def __init__(self, poblacion, nGeneracionesMaximas, nSoluciones, tamTorneo, heuristica, problema):
         self.candidatos = problema.list_candidatos
-        self.poblacion = []#[0] * len(self.candidatos)
+        self.poblacion = [0] * len(self.candidatos)/nSoluciones
         self.fitnessSols = [VMAX] * len(self.candidatos)
+        self.fitness = [VMAX] * len(self.candidatos/nSoluciones)
         self.tamTorneo = tamTorneo
         self.padres = []
         self.nGeneracionesMaximas = nGeneracionesMaximas
         self.nGeneracion = 0
 
     def inicializarN(self,nSoluciones):
-        for _ in range(len(self.candidatos)): #Un individuo esta compuesto por nSoluciones
-            individuo = set()
+        for _ in range(len(self.candidatos)): 
+            individuo = [0] * nSoluciones   #Un individuo esta compuesto por nSoluciones
             fitnessIndividuo = 0
             for _ in range(nSoluciones): 
                 #Cogemos uno random:
@@ -36,8 +37,9 @@ class evolutivoMALHECHO:
                 fitnessIndividuo = self.calcularFitnessSolucion(index)
                 self.fitnessSols[index] = fitnessIndividuo
                 #self.poblacion[index] = 1 #antes era soluciones
-                individuo.add(index)
-            self.poblacion.append(individuo,fitnessIndividuo)
+                individuo.append(index)
+            self.poblacion.append(individuo)
+            self.fitness.append(fitnessIndividuo)
 
     def calcularFitnessSolucion(self,solucionParcial):
         final = self.candidatos[solucionParcial]
@@ -51,6 +53,12 @@ class evolutivoMALHECHO:
         #heappush(self.fitness, (suma, individuo))
         #poblacion
         #self.soluciones[individuo] = 1
+        return suma
+
+    def calcularFitness(self,individuo):
+        suma = 0
+        for i in individuo:
+            suma = suma + self.calcularFitnessSolucion(self,i)
         return suma
 
 #    def seleccionPadres(self):#MAL HECHO NO HACER CASO
@@ -71,24 +79,22 @@ class evolutivoMALHECHO:
         for _ in range(self.poblacion):
             mejorFitness = (VMAX,0) #fitness,indice candidatos
             for _ in range (self.tamTorneo):
-                indiceAux = random.randrange(len(self.poblacion))
-                if self.fitnessSols[self.poblacion[indiceAux]] < mejorFitness[0]:
-                    mejorFitness[0] = self.fitnessSols[self.poblacion[indiceAux]] #Como estara almacenado en el diccionario no añadira complejidad
-                    mejorFitness[1] = self.poblacion[indiceAux]
+                indiceAux = random.randrange(len(self.poblacion)-1)
+                if self.fitness[indiceAux] < mejorFitness[0]:
+                    mejorFitness[0] = self.fitness[self.poblacion[indiceAux]] #Como estara almacenado en el diccionario no añadira complejidad
+                    mejorFitness[1] = indiceAux
             padresGeneracion.append(mejorFitness[1]) #Metemos el indice del mejor candidato de cada torneo
         return padresGeneracion
 
     def cruce(self, padres, indiceCruce):
         hijos = [0] * 2
-        #Cruce por un punto
+        #Cruce por un punto. Nos quedamos la mitad de soluciones parciales de cada padre
         if random.randrange(3) == 1:
             hijos[0] = padres[0]
             hijos[1] = padres[1]
-        else:
-            #hijos[0] = padres[1][:indiceCruce] + padres[0][indiceCruce:]
-            #hijos[1] = padres[0][:indiceCruce] + padres[1][indiceCruce:]
-            hijos[0] = padres[1]//10**indiceCruce + padres[0]%10**indiceCruce
-            hijos[1] = padres[0]//10**indiceCruce + padres[1]%10**indiceCruce
+        else:   
+            hijos[0] = padres[1][:indiceCruce] + padres[0][indiceCruce:]
+            hijos[1] = padres[0][:indiceCruce] + padres[1][indiceCruce:]
             if hijos[0] >= len(self.candidatos):
                 hijos[0] = padres[0]
             if hijos[1] >= len(self.candidatos):
@@ -97,8 +103,10 @@ class evolutivoMALHECHO:
 
     def mutacion(self, hijos):
         for i in range(len(hijos)):
-            if random.randint(0,1) == 0:
-                hijos[i] = 10 ** random.randint(0, len(str(len(self.poblacion)-1)))
+            nCambios = random.randint(0,self.nSoluciones-1)-self.nSoluciones//2 
+            if nCambios > 0:
+                for j in range(nCambios):
+                    hijos[i][j] =  random.randrange(len(self.candidatos))
         return hijos
 
     def genetico(self):
@@ -118,6 +126,8 @@ class evolutivoMALHECHO:
                 hijos = self.cruce(padres,len(str(len(self.poblacion)-1))//2)
                 #Mutacion
                 hijos = self.mutacion(hijos)
+                self.poblacion[i] = hijos[0]
+                self.poblacion[i+1] = hijos[1]
             #Reemplazo
 
             #Calculamos fitness 
