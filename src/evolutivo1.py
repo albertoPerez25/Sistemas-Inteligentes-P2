@@ -21,6 +21,7 @@ class evolutivoMALHECHO:
         self.poblacion = [0] * len(self.candidatos)/nSoluciones
         self.fitnessSols = [VMAX] * len(self.candidatos)
         self.fitness = [VMAX] * len(self.candidatos/nSoluciones)
+        self.fitnessGeneracion = [VMAX] * len(self.candidatos/nSoluciones)
         self.tamTorneo = tamTorneo
         self.padres = []
         self.nGeneracionesMaximas = nGeneracionesMaximas
@@ -38,9 +39,12 @@ class evolutivoMALHECHO:
                 self.fitnessSols[index] = fitnessIndividuo
                 #self.poblacion[index] = 1 #antes era soluciones
                 individuo.append(index)
+                if (fitnessIndividuo < mejorFitness):
+                    mejorFitness = fitnessIndividuo
+                    mejorIndividuo = index
             self.poblacion.append(individuo)
             self.fitness.append(fitnessIndividuo)
-
+        return mejorIndividuo
     def calcularFitnessSolucion(self,solucionParcial):
         final = self.candidatos[solucionParcial]
         suma = 0
@@ -112,7 +116,7 @@ class evolutivoMALHECHO:
     def genetico(self):
         padres = [0] * 2
         hijos = [0] * 2
-        self.inicializarN(self.nSoluciones)
+        mejorIndividuo = self.inicializarN(self.nSoluciones)
         #for nGeneracion in range(self.nGeneracionesMaximas):
         while (self.nGeneracion < self.nGeneracionesMaximas):
             #Seleccionamos siguiente generacion de padres
@@ -126,13 +130,17 @@ class evolutivoMALHECHO:
                 hijos = self.cruce(padres,len(str(len(self.poblacion)-1))//2)
                 #Mutacion
                 hijos = self.mutacion(hijos)
-                self.poblacion[i] = hijos[0]
-                self.poblacion[i+1] = hijos[1]
-            #Reemplazo
+                #Reemplazo. Mantenemos el mejor individuo de la generacion pasada, a no ser que haya uno mejor
+                fitnessHijo = self.calcularFitness(hijos[0])
+                esMejorFitness = fitnessHijo < self.fitness[i]
+                if (self.poblacion[i] != mejorIndividuo) or esMejorFitness:
+                    self.poblacion[i] = hijos[0]
+                    self.fitness[i] = fitnessHijo
+                    if esMejorFitness:
+                        mejorIndividuo = hijos[0]
 
-            #Calculamos fitness 
-
-
+                if (self.poblacion[i+1] != mejorIndividuo or self.fitness[i+1] < self.fitnessGeneracion[i+1]):
+                    self.poblacion[i+1] = hijos[1]
             self.nGeneracion += 1
                
 
