@@ -1,16 +1,19 @@
 #clase abstracta que tendrá busqueda(), expandir(), estadisticas() e imprimirResultado()
+import math
 from clasesBasicas import Nodo
 from abc import ABC,abstractmethod
 import time
 
 class Busqueda(ABC):
-    def __init__(self, problema):
+    def __init__(self, problema, inicial, final):
         self.frontera = None # Se inicializará al tipo que le corresponda a cada algoritmo
         self.problema = problema
         self.tInicio = 0
         self.tFinal = 0
         self.cerrados = set()        # Para no volver a expandir nodos ya visitados
-        self.nodo = Nodo(problema.Inicial)
+        self.inicial = problema.getEstado(inicial)
+        self.nodo = Nodo(self.inicial)
+        self.final = problema.getEstado(final)
         # Estadisticas:
         self.nExpandidos = 0
         self.nProfundidad = 0
@@ -19,8 +22,9 @@ class Busqueda(ABC):
 
     def expandir(self,nodo,problema):
         acciones = problema.getAccionesDe(nodo.estado.identifier)
-        while not len(acciones) == 0:            
-            accion = acciones.pop() # Cambiado a pop porque ahora es una lista segmentos
+        #while not len(acciones) == 0:          
+        for accion in acciones: 
+            # Cambiado a for porque ahora es una lista segmentos
             sucesor = Nodo(problema.getEstado(accion.destination))
             sucesor.padre = nodo
             sucesor.accion = accion
@@ -33,19 +37,19 @@ class Busqueda(ABC):
                                                                 # desde expandir
                                                             
     def busqueda(self):
-        self.tInicio = time.time()
+        #self.tInicio = time.time()
         self.añadirNodoAFrontera(self.nodo,self.frontera)
         while(not self.esVacia(self.frontera)): 
             self.nodo = self.extraerNodoDeFrontera(self.frontera)
-            if (self.nodo.estado.__eq__(self.problema.Final)):
-                self.tFinal = time.time()
-                return self.listaAcciones(self.nodo)
+            if (self.nodo.estado == (self.final)):     # Cambio de .eq a ==
+                #self.tFinal = time.time()
+                return self.nodo.coste 
             if (not self.nodo.estado.identifier in self.cerrados):
                 self.expandir(self.nodo, self.problema)     # Obtenemos los sucesores con Expandir()
                 self.nExpandidos = self.nExpandidos + 1
                 self.cerrados.add(self.nodo.estado.identifier)
-        self.tFinal = time.time()
-        return self.imprimirResultado([])
+        #self.tFinal = time.time()
+        return 999999999999999999
 
     def listaAcciones(self,nodo):
         sol = []                         # Lista de acciones que han llevado desde el final al inicial

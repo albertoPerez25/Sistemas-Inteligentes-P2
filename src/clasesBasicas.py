@@ -47,8 +47,11 @@ class Candidato:
     def __init__(self, identifier, population):
         self.identifier = identifier
         self.population = population
+    def __str__(self):
+        return f"Candidato: id={self.identifier}"
+    def __repr__(self):
+        return f"{self.identifier}"
     
-
 class Problema:   
     #Constructor de Problema
     def __init__(self,ruta):
@@ -58,7 +61,9 @@ class Problema:
         self.dic_estados = {}
         self.dic_acciones = {}
         self.maxSpeed = 0
-        self.list_candidatos = self.data['candidates']
+        self.dic_candidatos = []
+        self.candidatos = self.data['candidates']
+        self.number_stations = self.data['number_stations']
 
         # Pasamos las intersecciones del JSON a un nuevo diccionario estados
         for inter in self.data['intersections']:
@@ -71,15 +76,21 @@ class Problema:
         #self.Final = self.dic_estados[self.data["final"]]
         
         # Pasamos los segmentos del JSON a un nuevo diccionario acciones   
-        segOrd = self.data['segments'].sort(); #Ordenamos la  
+        segOrd = self.data['segments']; #Ordenamos la  
         for seg in segOrd:
             if (seg['speed']*(10/36) > self.maxSpeed):
                 self.maxSpeed = seg['speed']*(10/36) # km/h -> m/s
             accion=Accion(seg['origin'], seg['destination'], seg['distance'], seg['speed'])
-            self.dic_acciones[seg['origin']]=accion  # Metemos las acciones de cada Estado en una lista ordenada
+            self.dic_acciones[seg['origin']].append(accion)  # Metemos las acciones de cada Estado en una lista ordenada
 
+        # Ordenamos las acciones de cada estado
+        for id in self.dic_acciones:
+            self.dic_acciones[id].sort(key=lambda x: x.destination)
+
+        # Pasamos los candidatos del JSON a un nuevo diccionario candidatos  
         for cand in self.data['candidates']:
-            self.list_candidatos.append(cand)
+            self.dic_candidatos.append(Candidato(cand[0], cand[1]))
+            #self.dic_candidatos.update({cand[0]:(Candidato(cand[0], cand[1]))})
 
     # Obtener un objeto Estado a partir de su ID
     def getEstado(self, id):

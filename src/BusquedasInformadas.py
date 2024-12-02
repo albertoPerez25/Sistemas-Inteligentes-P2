@@ -6,8 +6,8 @@ from queue import PriorityQueue # Para la PriorityQueue
 
 
 class BusquedaInformada(Busqueda,metaclass=ABCMeta):
-    def __init__(self, problema,heuristica):
-        super().__init__(problema)
+    def __init__(self, problema, inicial, final, heuristica):
+        super().__init__(problema, inicial, final)
         self.frontera = PriorityQueue() # Frontera se usará como PriorityQueue de nodos a ser expandidos
         self.H = heuristica
     @abstractmethod
@@ -27,7 +27,7 @@ class PrimeroMejor(BusquedaInformada):
 class AEstrella(BusquedaInformada):
     def añadirNodoAFrontera(self, nodo, frontera):
         gn = nodo.coste   
-        hn = self.H.heuristica(nodo)
+        hn = self.H.heuristica(nodo, self.final)
         fn = hn + gn   
         frontera.put((fn, nodo))                                                     
     
