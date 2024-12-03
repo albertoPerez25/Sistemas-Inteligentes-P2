@@ -13,19 +13,22 @@ medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_
 
 RUTAJSON = medium1
 VMAX = math.inf #Valor Maximo
-NGENS = 100000
 
 h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
 class evolutivoMALHECHO:
-    def __init__(self, nGeneracionesMaximas, tamTorneo, aestrella, problema):
+    def __init__(self, nGeneracionesMaximas, tamTorneo, tamPoblacion ,aestrella, problema):
         self.candidatos = problema.candidatos
         self.nSoluciones = problema.number_stations
-        self.poblacion = [0] * ((len(self.candidatos))//self.nSoluciones)
+        if tamPoblacion != None:
+            self.tamPoblacion = tamPoblacion
+        else:
+            self.tamPoblacion = (len(self.candidatos)//self.nSoluciones)
+        self.poblacion = [0] * self.tamPoblacion
         self.fitnessSols = [VMAX] * len(self.candidatos)
-        self.fitness = [VMAX] * (len(self.candidatos)//self.nSoluciones)
+        self.fitness = [VMAX] * self.tamPoblacion
         self.mejorFitness = VMAX
         self.mejorIndividuo = [0] * self.nSoluciones
         self.aestrella = aestrella
@@ -35,6 +38,7 @@ class evolutivoMALHECHO:
         self.nGeneracionesMaximas = nGeneracionesMaximas
         self.tInicio = 0
         self.tFinal = 0
+        self.poblacionDeCandidatos = 0
 
     @lru_cache(maxsize=1280000)
     def functoolsCache(self, inicial, final):
@@ -82,21 +86,23 @@ class evolutivoMALHECHO:
         suma = 0
         if (self.fitnessSols[solucionParcial] != VMAX):
             return self.fitnessSols[solucionParcial]
+
         for inicial in self.candidatos:
-            #inicial[1] -> poblacion, inicial[0] -> identificador, final[0] = id final
-            #print("1.Entra a AESTRELLA")
-            #busqueda = self.aestrellaCache(inicial[0],final[0])
-            busqueda = self.nuestraCache(inicial[0], final[0])
-            #busqueda = aestrella.busqueda(inicial[0],final[0])
-            suma = (inicial[1] * busqueda) + suma
-        self.fitnessSols[solucionParcial] = suma
+            busqueda += self.nuestraCache(inicial[0], final[0])         # inicial[1] es poblacion 
+            if(self.poblacionDeCandidatos == 0):                        # inicial[0] es identificador y final[0] es id final
+                self.poblacionDeCandidatos += inicial[1]
+
+        self.fitnessSols[solucionParcial] = suma * self.poblacionDeCandidatos
         return suma
 
     def calcularFitness(self,individuo):
         suma = 0
+        sumaAnterior = VMAX
         for i in individuo:
-            suma = suma + self.calcularFitnessSolucion(i)
-        return suma
+            suma = self.calcularFitnessSolucion(i)
+            if suma < sumaAnterior:
+                sumaAnterior = suma
+        return sumaAnterior/self.poblacionDeCandidatos
 
     def seleccionGeneracionRango(self):#Seleccion por torneo
         #Cogemos los mejores entre n random:    Podria hacerse con una PriorityQueue, seria mejor?      
@@ -184,5 +190,5 @@ class evolutivoMALHECHO:
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
-print(evolutivoMALHECHO(NGENS, 10, aestrella, problema).genetico())
+print(evolutivoMALHECHO(1000, 10, 1000, aestrella, problema).genetico())
 plt.show()
