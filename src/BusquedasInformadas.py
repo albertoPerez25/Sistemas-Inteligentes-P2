@@ -6,10 +6,11 @@ from queue import PriorityQueue # Para la PriorityQueue
 
 
 class BusquedaInformada(Busqueda,metaclass=ABCMeta):
-    def __init__(self, problema, inicial, final, heuristica):
-        super().__init__(problema, inicial, final)
+    def __init__(self, problema, heuristica):
+        super().__init__(problema)
         self.frontera = PriorityQueue() # Frontera se usará como PriorityQueue de nodos a ser expandidos
         self.H = heuristica
+        self.cacheHeuristica = {}
     @abstractmethod
     def añadirNodoAFrontera(self, nodo, frontera):
         pass
@@ -19,6 +20,19 @@ class BusquedaInformada(Busqueda,metaclass=ABCMeta):
     
     def esVacia(self, frontera):                # Igual en PrimeroMejor y AEstrella
         return frontera.empty()
+    
+    def cache_heuristica(self, nodo):
+        # Crear la key de la cache con el id del estado del nodo
+        key_cache = (nodo.estado.identifier)
+        
+        # Comprobamos si esta en la cache
+        if key_cache in self.cache:
+            return self.cache[key_cache]
+        
+        # Si no esta en la cache, guardamos el coste
+        resultado = self.H.heuristica(nodo, self.final)
+        self.cache[key_cache] = resultado
+        return resultado
 
 class PrimeroMejor(BusquedaInformada):
     def añadirNodoAFrontera(self, nodo, frontera):
@@ -27,7 +41,7 @@ class PrimeroMejor(BusquedaInformada):
 class AEstrella(BusquedaInformada):
     def añadirNodoAFrontera(self, nodo, frontera):
         gn = nodo.coste   
-        hn = self.H.heuristica(nodo, self.final)
+        hn = self.cache_heuristica(nodo)                # Almacenamos en una cache la heuristica de un estado
         fn = hn + gn   
         frontera.put((fn, nodo))                                                     
     

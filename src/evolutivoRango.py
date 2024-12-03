@@ -6,6 +6,7 @@ from BusquedasInformadas import AEstrella
 from clasesHeuristica import Heuristica1,Heuristica2,Heuristica3
 from functools import lru_cache
 import matplotlib.pyplot as plt
+#from evolutivo1 import evolutivoMALHECHO
 
 import random
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
@@ -19,8 +20,8 @@ h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
-class evolutivoMALHECHO:
-    def __init__(self, nGeneracionesMaximas, tamTorneo, aestrella, problema):
+class evolutivoRango():
+    def __init__(self, nGeneracionesMaximas, aestrella, problema):
         self.candidatos = problema.candidatos
         self.nSoluciones = problema.number_stations
         self.poblacion = [0] * ((len(self.candidatos))//self.nSoluciones)
@@ -30,11 +31,12 @@ class evolutivoMALHECHO:
         self.mejorIndividuo = [0] * self.nSoluciones
         self.aestrella = aestrella
         self.problema = problema
-        self.tamTorneo = tamTorneo
         self.padres = []
         self.nGeneracionesMaximas = nGeneracionesMaximas
         self.tInicio = 0
         self.tFinal = 0
+        self.rango = []
+        self.ps = set()
 
     @lru_cache(maxsize=1280000)
     def functoolsCache(self, inicial, final):
@@ -73,8 +75,8 @@ class evolutivoMALHECHO:
                 mejorIndividuo = individuo
             self.poblacion[i] = individuo
             self.fitness[i] = fitnessIndividuo
+            heappush(self.rango, (fitnessIndividuo, i))
         self.mejorFitness = mejorFitness
-        #print("mejor fitness inicial: ",mejorFitness)
         return mejorIndividuo
 
     def calcularFitnessSolucion(self,solucionParcial):
@@ -84,10 +86,7 @@ class evolutivoMALHECHO:
             return self.fitnessSols[solucionParcial]
         for inicial in self.candidatos:
             #inicial[1] -> poblacion, inicial[0] -> identificador, final[0] = id final
-            #print("1.Entra a AESTRELLA")
-            #busqueda = self.aestrellaCache(inicial[0],final[0])
             busqueda = self.nuestraCache(inicial[0], final[0])
-            #busqueda = aestrella.busqueda(inicial[0],final[0])
             suma = (inicial[1] * busqueda) + suma
         self.fitnessSols[solucionParcial] = suma
         return suma
@@ -98,18 +97,21 @@ class evolutivoMALHECHO:
             suma = suma + self.calcularFitnessSolucion(i)
         return suma
 
-    def seleccionGeneracionRango(self):#Seleccion por torneo
-        #Cogemos los mejores entre n random:    Podria hacerse con una PriorityQueue, seria mejor?      
+    def seleccionGeneracionRango(self):#Seleccion por rango
         padresGeneracion = [0] * len(self.poblacion)
-        for i in range(len(self.poblacion)):
-            mejorFitness = VMAX #fitness
-            mejorIndividuo = 0 #indice en poblacion
-            for _ in range (self.tamTorneo):
-                indiceAux = random.randrange(len(self.poblacion))
-                if self.fitness[indiceAux] < mejorFitness:
-                    mejorFitness = self.fitness[indiceAux] #Como estara almacenado en el diccionario no añadira complejidad
-                    mejorIndividuo = indiceAux
-            padresGeneracion[i] = mejorIndividuo #Metemos el indice del mejor candidato de cada torneo
+        tam = len(self.poblacion)
+        pAcumulada = 0
+        for i in range(1,tam+1):
+            pAcumulada += (2*(tam - i + 1)/(tam**2 + tam))
+            self.ps.add(pAcumulada)
+        for i in range(tam):
+            aux = random.random()
+            for prob in self.ps:
+                if aux <= prob:
+                    padresGeneracion[i] = heappop(self.rango)[1]
+                    break
+        if len(self.rango) != 0:
+            raise Exception("No se vacia rango!")
         return padresGeneracion
 
     def cruce(self, padres, indiceCruce):
@@ -135,7 +137,7 @@ class evolutivoMALHECHO:
                     hijos[i][j] =  random.randrange(len(self.candidatos))
         return hijos
 
-    def genetico(self):
+    def genetico2(self):
         self.tInicio = time.time()
         padres = [0] * 2
         hijos = [0] * 2
@@ -166,6 +168,7 @@ class evolutivoMALHECHO:
                             #print("Ha encontrado un mejor individuo")
                             self.mejorIndividuo = hijos[j]
                             self.mejorFitness = fitnessHijo
+                    heappush(self.rango, (self.fitness[i+j], i+j))
         print("Fitness del mejor individuo final: ",self.mejorFitness)
         for ind in self.mejorIndividuo:
             print(self.candidatos[ind][0])
@@ -184,5 +187,5 @@ class evolutivoMALHECHO:
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
-print(evolutivoMALHECHO(NGENS, 10, aestrella, problema).genetico())
+print(evolutivoRango(NGENS, aestrella, problema).genetico2())
 plt.show()

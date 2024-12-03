@@ -69,7 +69,7 @@ class Problema:
         for inter in self.data['intersections']:
             self.dic_estados.update({inter['identifier']:(Estado(inter['identifier'], inter['latitude'], inter['longitude']))})         
             self.dic_acciones.update({inter['identifier']:[]})  # Acciones = {id:Lista de Acciones}
-            
+            #editar
         #QUITAMOS INICIAL Y FINAL YO NO ESTAN EN EL JSON
         # Cargamos los nodos iniciales y finales del JSON.
         #self.Inicial = self.dic_estados[self.data["initial"]]
@@ -117,6 +117,6 @@ class Nodo:
     def __eq__(self,otro):
         if not isinstance(otro, Nodo):
             return False
-        return self.estado.__eq__(otro.estado) and self.nGenerado.__eq__(otro.nGenerado)
+        return self.estado==(otro.estado) and self.nGenerado.__eq__(otro.nGenerado)
     def __lt__(self,otro):
-        return self.estado.__lt__(otro.estado)
+        return self.estado<(otro.estado)

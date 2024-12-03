@@ -5,20 +5,34 @@ from abc import ABC,abstractmethod
 import time
 
 class Busqueda(ABC):
-    def __init__(self, problema, inicial, final):
+    def __init__(self, problema):
         self.frontera = None # Se inicializará al tipo que le corresponda a cada algoritmo
         self.problema = problema
         self.tInicio = 0
         self.tFinal = 0
         self.cerrados = set()        # Para no volver a expandir nodos ya visitados
-        self.inicial = problema.getEstado(inicial)
-        self.nodo = Nodo(self.inicial)
-        self.final = problema.getEstado(final)
+        self.inicial = None
+        self.nodo = None
+        self.final = None
         # Estadisticas:
         self.nExpandidos = 0
         self.nProfundidad = 0
         self.nCosteTotal = 0           
         self.nGenerados = 0
+
+        self.cache = {}
+
+    def nuestraCache(self, inicial, destino, coste):
+        # Crear la key de la cache con inicial y destino
+        key_cache = (inicial, destino)
+        
+        # Comprobamos si esta en la cache
+        if key_cache in self.cache:
+            return self.cache[key_cache]
+        
+        # Si no esta en la cache, guardamos el coste
+        self.cache[key_cache] = coste
+
 
     def expandir(self,nodo,problema):
         acciones = problema.getAccionesDe(nodo.estado.identifier)
@@ -29,15 +43,19 @@ class Busqueda(ABC):
             sucesor.padre = nodo
             sucesor.accion = accion
             sucesor.coste = nodo.coste + accion.time
+            if (sucesor.estado.identifier in self.problema.candidatos):
+                self.nuestraCache(nodo.estado.identifier,sucesor.estado.identifier,sucesor.coste)
             sucesor.profundidad = nodo.profundidad + 1
             self.nGenerados = self.nGenerados + 1
             sucesor.nGenerado = self.nGenerados
             self.añadirNodoAFrontera(sucesor, self.frontera)    # Añadimos los sucesores a frontera.
                                                                 # Nos ahorramos un bucle For al añadirlos 
                                                                 # desde expandir
-                                                            
-    def busqueda(self):
+    def busqueda(self,inicial,final):
         #self.tInicio = time.time()
+        self.inicial = self.problema.getEstado(inicial)
+        self.nodo = Nodo(self.inicial)
+        self.final = self.problema.getEstado(final)
         self.añadirNodoAFrontera(self.nodo,self.frontera)
         while(not self.esVacia(self.frontera)): 
             self.nodo = self.extraerNodoDeFrontera(self.frontera)
@@ -49,7 +67,7 @@ class Busqueda(ABC):
                 self.nExpandidos = self.nExpandidos + 1
                 self.cerrados.add(self.nodo.estado.identifier)
         #self.tFinal = time.time()
-        return 999999999999999999
+        return 69696969
 
     def listaAcciones(self,nodo):
         sol = []                         # Lista de acciones que han llevado desde el final al inicial
