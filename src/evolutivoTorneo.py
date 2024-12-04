@@ -1,13 +1,9 @@
-from heapq import heappush,heappop
 import math
-import time
 from clasesBasicas import Problema 
 from BusquedasInformadas import AEstrella
 from clasesHeuristica import Heuristica1,Heuristica2,Heuristica3
-from functools import lru_cache
 import matplotlib.pyplot as plt
-from evolutivoGeneral import evolutivo, VMAX
-#from evolutivo1 import evolutivoMALHECHO
+from evolutivoGeneral import evolutivo,VMAX
 
 import random
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
@@ -19,32 +15,34 @@ h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
-class evolutivoRango(evolutivo):
-    def __init__(self, nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema):
+class evolutivoTorneo(evolutivo):
+    def __init__(self, nGeneracionesMaximas, tamTorneo, tamPoblacion, tasaMutacion, aestrella, problema):
         super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema)
-        self.rango = []
-        self.ps = set()
+        self.tamTorneo = tamTorneo
 
     def inicializarN(self,nSoluciones):
         mejorFitness = VMAX
         mejorIndividuo = [0] * nSoluciones
+        
         for i in range(len(self.poblacion)): 
-            individuo = [0] * nSoluciones   #Un individuo esta compuesto por nSoluciones
+            individuo = [0] * nSoluciones   # Un individuo esta compuesto por nSoluciones
             fitnessIndividuo = 0
+
             for j in range(nSoluciones): 
-                #Cogemos uno random:
-                index = random.randrange(len(self.candidatos))
-                #Calculamos su fitness / funcion evaluacion:
-                individuo[j] = index
-                # Si el individuo es mejor que el mejor de todos, lo guardamos
-            fitnessIndividuo = self.calcularFitness(individuo)
+                index = random.randrange(len(self.candidatos))         # Cogemos uno random
+                while index in individuo:
+                    index = random.randrange(len(self.candidatos))
+                individuo[j] = index                                   # Calculamos su fitness / funcion evaluacion:
+            fitnessIndividuo = self.calcularFitness(individuo)         # Si el individuo es mejor que el mejor de todos, lo guardamos
+            
             if (fitnessIndividuo < mejorFitness):
                 mejorFitness = fitnessIndividuo
                 mejorIndividuo = individuo
+
             self.poblacion[i] = individuo
             self.fitness[i] = fitnessIndividuo
-            heappush(self.rango, (fitnessIndividuo, i))
         self.mejorFitness = mejorFitness
+        #print("mejor fitness inicial: ",mejorFitness)
         return mejorIndividuo
 
     def calcularFitnessSolucion(self,solucionParcial):
@@ -72,25 +70,20 @@ class evolutivoRango(evolutivo):
         re = sumaMinima/self.poblacionDeCandidatos
         return re
 
-    def seleccionGeneracion(self):   # Seleccion por rango
-        padresGeneracion = [0] * len(self.poblacion)
-        tam = len(self.poblacion)
-        pAcumulada = 0
-        for i in range(1,tam+1):
-            pAcumulada += (2*(tam - i + 1)/(tam**2 + tam))
-            self.ps.add(pAcumulada)
-        for i in range(tam):
-            aux = random.random()
-            for prob in self.ps:
-                if aux <= prob:
-                    padresGeneracion[i] = heappop(self.rango)[1]
-                    break
-        if len(self.rango) != 0:
-            raise Exception("No se vacia rango!")
-        self.rango = []
+    def seleccionGeneracion(self):                 # Seleccion por torneo 
+        padresGeneracion = [0] * len(self.poblacion)    # Cogemos los mejores entre n random:  
+        for i in range(len(self.poblacion)):
+            mejorFitness = VMAX     # fitness
+            mejorIndividuo = 0      # indice en poblacion
+            for _ in range (self.tamTorneo):
+                indiceAux = random.randrange(len(self.poblacion))
+                if self.fitness[indiceAux] < mejorFitness:
+                    mejorFitness = self.fitness[indiceAux]  # Como estara almacenado en el diccionario no añadira complejidad
+                    mejorIndividuo = indiceAux
+            padresGeneracion[i] = mejorIndividuo            # Metemos el indice del mejor candidato de cada torneo
         return padresGeneracion
 
-    def cruce(self, padres, indiceCruce):
+    def cruce(self, padres, indiceCruce):       # Cruce por un punto. Nos quedamos la mitad de soluciones parciales de cada padre
         hijos = [0] * 2
         hijos[0] = [0] * self.nSoluciones
         hijos[1] = [0] * self.nSoluciones
@@ -119,7 +112,7 @@ class evolutivoRango(evolutivo):
                     indiceRandom = random.randrange(len(self.candidatos))
                 hijos[i][random.randrange(len(hijos[i]))] = indiceRandom
         return hijos
-
+    
     def reemplazar(self, hijos, i):
         for j in range(2): # 2 Hijos
             fitnessHijo = self.calcularFitness(hijos[j])
@@ -131,11 +124,9 @@ class evolutivoRango(evolutivo):
                     #print("Ha encontrado un mejor individuo")
                     self.mejorIndividuo = hijos[j]
                     self.mejorFitness = fitnessHijo
-            heappush(self.rango, (self.fitness[i+j], i+j))
-
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
-#nGeneracionesMaximas, tamPoblacion , tasaMutacion
-print(evolutivoRango(20, 1, .9, aestrella, problema).genetico())
+#nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion
+print(evolutivoTorneo(50, 5, 3, 1, aestrella, problema).genetico())
 plt.show()
