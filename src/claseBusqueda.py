@@ -10,7 +10,7 @@ class Busqueda(ABC):
         self.problema = problema
         self.tInicio = 0
         self.tFinal = 0
-        self.cerrados = set()        # Para no volver a expandir nodos ya visitados
+        self.cerrados = None        # Para no volver a expandir nodos ya visitados
         self.inicial = None
         self.nodo = None
         self.final = None
@@ -43,7 +43,7 @@ class Busqueda(ABC):
             sucesor.padre = nodo
             sucesor.accion = accion
             sucesor.coste = nodo.coste + accion.time
-            if (sucesor.estado.identifier in self.problema.candidatos):
+            if (sucesor.estado.identifier in self.problema.candidatos[0]):
                 self.nuestraCache(nodo.estado.identifier,sucesor.estado.identifier,sucesor.coste)
             sucesor.profundidad = nodo.profundidad + 1
             self.nGenerados = self.nGenerados + 1
@@ -56,6 +56,8 @@ class Busqueda(ABC):
         self.inicial = self.problema.getEstado(inicial)
         self.nodo = Nodo(self.inicial)
         self.final = self.problema.getEstado(final)
+        self.cerrados = set()        # Para no volver a expandir nodos ya visitados
+        self.vaciar_frontera()
         self.añadirNodoAFrontera(self.nodo,self.frontera)
         while(not self.esVacia(self.frontera)): 
             self.nodo = self.extraerNodoDeFrontera(self.frontera)
@@ -67,7 +69,7 @@ class Busqueda(ABC):
                 self.nExpandidos = self.nExpandidos + 1
                 self.cerrados.add(self.nodo.estado.identifier)
         #self.tFinal = time.time()
-        return 69696969
+        return 9999
 
     def listaAcciones(self,nodo):
         sol = []                         # Lista de acciones que han llevado desde el final al inicial
@@ -108,4 +110,7 @@ class Busqueda(ABC):
         pass
     @abstractmethod
     def esVacia(self, frontera):
+        pass
+    @abstractmethod
+    def vaciar_frontera(self):
         pass

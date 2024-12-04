@@ -19,7 +19,7 @@ h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
 class evolutivoMALHECHO:
-    def __init__(self, nGeneracionesMaximas, tamTorneo, tamPoblacion ,aestrella, problema):
+    def __init__(self, nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion,aestrella, problema):
         self.candidatos = problema.candidatos
         self.nSoluciones = problema.number_stations
         if tamPoblacion != None:
@@ -34,11 +34,13 @@ class evolutivoMALHECHO:
         self.aestrella = aestrella
         self.problema = problema
         self.tamTorneo = tamTorneo
+        self.tasaMutacion = tasaMutacion
         self.padres = []
         self.nGeneracionesMaximas = nGeneracionesMaximas
         self.tInicio = 0
         self.tFinal = 0
         self.poblacionDeCandidatos = 0
+        self.calculadoPoblacionTotalCandidatos = False
 
     @lru_cache(maxsize=1280000)
     def functoolsCache(self, inicial, final):
@@ -68,6 +70,10 @@ class evolutivoMALHECHO:
             for j in range(nSoluciones): 
                 #Cogemos uno random:
                 index = random.randrange(len(self.candidatos))
+
+                while index in individuo:
+                    index = random.randrange(len(self.candidatos))
+
                 #Calculamos su fitness / funcion evaluacion:
                 individuo[j] = index
                 # Si el individuo es mejor que el mejor de todos, lo guardamos
@@ -83,26 +89,29 @@ class evolutivoMALHECHO:
 
     def calcularFitnessSolucion(self,solucionParcial):
         final = self.candidatos[solucionParcial]
-        suma = 0
+        busqueda = 0
         if (self.fitnessSols[solucionParcial] != VMAX):
             return self.fitnessSols[solucionParcial]
 
         for inicial in self.candidatos:
             busqueda += self.nuestraCache(inicial[0], final[0])         # inicial[1] es poblacion 
-            if(self.poblacionDeCandidatos == 0):                        # inicial[0] es identificador y final[0] es id final
+                      # inicial[0] es identificador y final[0] es id final
+            if not self.calculadoPoblacionTotalCandidatos:
                 self.poblacionDeCandidatos += inicial[1]
-
-        self.fitnessSols[solucionParcial] = suma * self.poblacionDeCandidatos
-        return suma
+        self.calculadoPoblacionTotalCandidatos = True
+        sol = busqueda * self.poblacionDeCandidatos
+        self.fitnessSols[solucionParcial] = sol
+        return sol
 
     def calcularFitness(self,individuo):
         suma = 0
-        sumaAnterior = VMAX
-        for i in individuo:
-            suma = self.calcularFitnessSolucion(i)
-            if suma < sumaAnterior:
-                sumaAnterior = suma
-        return sumaAnterior/self.poblacionDeCandidatos
+        sumaMinima = VMAX
+        for candidato in individuo:
+            suma = self.calcularFitnessSolucion(candidato)
+            if suma < sumaMinima:
+                sumaMinima = suma
+        re = sumaMinima/self.poblacionDeCandidatos
+        return re
 
     def seleccionGeneracionRango(self):#Seleccion por torneo
         #Cogemos los mejores entre n random:    Podria hacerse con una PriorityQueue, seria mejor?      
@@ -120,25 +129,45 @@ class evolutivoMALHECHO:
 
     def cruce(self, padres, indiceCruce):
         hijos = [0] * 2
+        hijos[0] = [0] * self.nSoluciones
+        hijos[1] = [0] * self.nSoluciones
         #Cruce por un punto. Nos quedamos la mitad de soluciones parciales de cada padre
-        if (random.randrange(2) == 1) or (len(str(padres[0]))>indiceCruce and len(str(padres[1]))>indiceCruce):
+
+        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce):
             hijos[0] = padres[0]
             hijos[1] = padres[1]
         else:   
-            hijos[0] = padres[1][:indiceCruce] + padres[0][indiceCruce:]
-            hijos[1] = padres[0][:indiceCruce] + padres[1][indiceCruce:]
-            if hijos[0] > padres[0]:
-                hijos[0] = padres[0]
-            if hijos[1] > padres[0]:
-                hijos[1] = padres[1]
+#            hijos[0] = padres[1][:indiceCruce] + padres[0][indiceCruce:]
+ #           hijos[1] = padres[0][:indiceCruce] + padres[1][indiceCruce:]
+  #          if len(hijos[0]) > len(padres[0]):
+   #             hijos[0] = padres[0]
+    #        if len(hijos[1]) > len(padres[1]):
+     #           hijos[1] = padres[1]
+            for i in range(len(padres[0])):
+                if i < indiceCruce or padres[1][i] in hijos[0] :
+                    hijos[0][i]=padres[0][i]
+                else:
+                    hijos[0][i]=padres[1][i]
+
+                if i < indiceCruce or padres[0][i] in hijos[1] :
+                    hijos[1][i]=padres[1][i]
+                else:
+                    hijos[1][i]=padres[0][i]
         return hijos
 
     def mutacion(self, hijos):
         for i in range(len(hijos)): # Dos hijos, 0 y 1
-            nCambios = random.randint(0,self.nSoluciones-1)-self.nSoluciones//3 
-            if nCambios > 0:
-                for j in range(nCambios):
-                    hijos[i][j] =  random.randrange(len(self.candidatos))
+#            nCambios = random.randint(0,self.nSoluciones-1)-self.nSoluciones//3 
+ #           if nCambios > 0:
+  #              #for j in range(nCambios):
+   #             for j in range(len(hijos[i])):
+    #                hijos[i][j] = random.randrange(len(self.candidatos))
+            nRandom = random.random()
+            if nRandom < self.tasaMutacion:
+                indiceRandom = random.randrange(len(self.candidatos))
+                while indiceRandom in hijos[i]:
+                    indiceRandom = random.randrange(len(self.candidatos))
+                hijos[i][random.randrange(len(hijos[i]))] = indiceRandom
         return hijos
 
     def genetico(self):
@@ -158,7 +187,7 @@ class evolutivoMALHECHO:
                 padres[0] = self.poblacion[pGeneracion[i]]
                 padres[1] = self.poblacion[pGeneracion[i+1]]
                 #Cruce
-                hijos = self.cruce(padres,len(str(len(self.poblacion)-1))//2)
+                hijos = self.cruce(padres,(self.nSoluciones)//2)
                 #Mutacion
                 hijos = self.mutacion(hijos)
                 #Reemplazo. Mantenemos el mejor individuo de la generacion pasada, a no ser que haya uno mejor
@@ -190,5 +219,6 @@ class evolutivoMALHECHO:
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
-print(evolutivoMALHECHO(1000, 10, 1000, aestrella, problema).genetico())
+#nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion
+print(evolutivoMALHECHO(50, 5, 50, 1, aestrella, problema).genetico())
 plt.show()

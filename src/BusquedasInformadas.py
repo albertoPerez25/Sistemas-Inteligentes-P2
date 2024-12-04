@@ -21,17 +21,20 @@ class BusquedaInformada(Busqueda,metaclass=ABCMeta):
     def esVacia(self, frontera):                # Igual en PrimeroMejor y AEstrella
         return frontera.empty()
     
+    def vaciar_frontera(self):                  # Igual en PrimeroMejor y AEstrella
+        self.frontera = PriorityQueue()
+
     def cache_heuristica(self, nodo):
         # Crear la key de la cache con el id del estado del nodo
         key_cache = (nodo.estado.identifier)
         
         # Comprobamos si esta en la cache
-        if key_cache in self.cache:
-            return self.cache[key_cache]
+        if key_cache in self.cacheHeuristica:
+            return self.cacheHeuristica[key_cache]
         
         # Si no esta en la cache, guardamos el coste
         resultado = self.H.heuristica(nodo, self.final)
-        self.cache[key_cache] = resultado
+        self.cacheHeuristica[key_cache] = resultado
         return resultado
 
 class PrimeroMejor(BusquedaInformada):
