@@ -1,13 +1,9 @@
 from heapq import heappush,heappop
-import math
-import time
 from clasesBasicas import Problema 
 from BusquedasInformadas import AEstrella
 from clasesHeuristica import Heuristica1,Heuristica2,Heuristica3
-from functools import lru_cache
 import matplotlib.pyplot as plt
 from evolutivoGeneral import evolutivo, VMAX
-#from evolutivo1 import evolutivoMALHECHO
 
 import random
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
