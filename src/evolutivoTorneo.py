@@ -7,11 +7,11 @@ from evolutivoGeneral import Evolutivo,VMAX
 
 import random
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
-medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json' #tarda mas
-medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidates_167_ns_23.json'
+medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json' 
+medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidates_167_ns_23.json' #tarda mas
 medium3 = 'problems/medium/calle_f_albacete_2000_0_candidates_25_ns_4.json'
 
-RUTAJSON = medium1
+RUTAJSON = medium2
 
 h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
@@ -145,5 +145,5 @@ class evolutivoTorneo(Evolutivo):
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
 #nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion
-print(evolutivoTorneo(80, 8, 100, 1, aestrella, problema).genetico())
+print(evolutivoTorneo(80, 8, 100, .9, aestrella, problema).genetico())
 plt.show()

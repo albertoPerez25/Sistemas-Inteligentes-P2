@@ -8,8 +8,10 @@ from evolutivoGeneral import Evolutivo, VMAX
 import random
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
 medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json'
+medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidates_167_ns_23.json'
+medium3 = 'problems/medium/calle_f_albacete_2000_0_candidates_25_ns_4.json'
 
-RUTAJSON = medium1
+RUTAJSON = medium2
 
 h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
@@ -58,7 +60,7 @@ class evolutivoRango(Evolutivo):
         self.fitnessSols[solucionParcial] = sol
         return sol
 
-    def calcularFitness(self,individuo):
+    def calcularFitnessAntiguo(self,individuo):
         suma = 0
         sumaMinima = VMAX
         for candidato in individuo:
@@ -67,6 +69,20 @@ class evolutivoRango(Evolutivo):
                 sumaMinima = suma
         re = sumaMinima/self.poblacionDeCandidatos
         return re
+    
+    def calcularFitness(self,individuo):
+        tiempos = 0
+        for inicial in self.candidatos: #I
+            if not self.calculadoPoblacionTotalCandidatos: 
+                self.poblacionDeCandidatos += inicial[1] # inicial[1] es la poblacion de un candidato
+            tiempo = VMAX                                # inicial[0] es identificador del inicial
+            tiempoMin = VMAX
+            for final in individuo: #J
+                tiempo = self.nuestraCache(inicial[0],self.candidatos[final][0])
+                tiempoMin = min(tiempo,tiempoMin)       # si inicial = final no hacemos if pq tarda mas
+            tiempos += tiempoMin * inicial[1]
+        self.calculadoPoblacionTotalCandidatos = True
+        return tiempos/self.poblacionDeCandidatos
 
     def seleccionGeneracion(self):   # Seleccion por rango
         self.ps = set()
