@@ -3,7 +3,7 @@ from clasesBasicas import Problema
 from BusquedasInformadas import AEstrella
 from clasesHeuristica import Heuristica1,Heuristica2,Heuristica3
 import matplotlib.pyplot as plt
-from evolutivoGeneral import evolutivo, VMAX
+from evolutivoGeneral import Evolutivo, VMAX
 
 import random
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
@@ -15,7 +15,7 @@ h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
-class evolutivoRango(evolutivo):
+class evolutivoRango(Evolutivo):
     def __init__(self, nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema):
         super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema)
         self.rango = []
@@ -69,6 +69,7 @@ class evolutivoRango(evolutivo):
         return re
 
     def seleccionGeneracion(self):   # Seleccion por rango
+        self.ps = set()
         padresGeneracion = [0] * len(self.poblacion)
         tam = len(self.poblacion)
         pAcumulada = 0
@@ -133,5 +134,5 @@ class evolutivoRango(evolutivo):
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
 #nGeneracionesMaximas, tamPoblacion , tasaMutacion
-print(evolutivoRango(20, 1, .9, aestrella, problema).genetico())
+print(evolutivoRango(80, 100, .9, aestrella, problema).genetico())
 plt.show()

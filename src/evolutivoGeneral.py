@@ -6,7 +6,10 @@ from abc import ABC,abstractmethod
 
 VMAX = math.inf #Valor Maximo
 
-class evolutivo(ABC):
+cache = {}
+
+
+class Evolutivo(ABC):
     def __init__(self, nGeneracionesMaximas, tamPoblacion , tasaMutacion,aestrella, problema):
         self.candidatos = problema.candidatos
         self.nSoluciones = problema.number_stations
@@ -44,9 +47,9 @@ class evolutivo(ABC):
             return self.aestrella.cache[cache_key]
         
         # Si no esta en cache calculamos y almacenamos en cache
-        result = self.aestrella.busqueda(inicial, final)
-        self.aestrella.cache[cache_key] = result
-        return result
+        resultado = self.aestrella.busqueda(inicial, final)
+        self.aestrella.cache[cache_key] = resultado
+        return resultado
 
     @abstractmethod
     def inicializarN(self,nSoluciones):

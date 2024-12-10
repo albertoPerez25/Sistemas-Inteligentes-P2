@@ -1,15 +1,13 @@
-import math
 from clasesBasicas import Problema 
 from BusquedasInformadas import AEstrella
 from clasesHeuristica import Heuristica1,Heuristica2,Heuristica3
 import matplotlib.pyplot as plt
 from evolutivoGeneral import Evolutivo,VMAX
+import multiprocessing as mp
 
 import random
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
-medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json' #tarda mas
-medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidates_167_ns_23.json'
-medium3 = 'problems/medium/calle_f_albacete_2000_0_candidates_25_ns_4.json'
+medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json'
 
 RUTAJSON = medium1
 
@@ -17,10 +15,33 @@ h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
+problema = Problema(RUTAJSON)
+aestrella = AEstrella(problema, h2)
+
+nCores = mp.cpu_count()
+
+def cacheMultiproceso(inicial, final):
+    if inicial in aestrella.cache:
+        return aestrella.cache[inicial]
+    else:
+        aestrella.cache[inicial] = aestrella.busqueda(inicial, final)
+        return aestrella.cache[inicial]
+
+manager = mp.Manager()
 class evolutivoTorneo(Evolutivo):
-    def __init__(self, nGeneracionesMaximas, tamTorneo, tamPoblacion, tasaMutacion, aestrella, problema):
+    def __init__(self, nGeneracionesMaximas, tamTorneo, tamPoblacion, tasaMutacion, aestrella, problema, heuristica):
         super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema)
         self.tamTorneo = tamTorneo
+        self.nProcesos = 2
+        self.candidatosPorProceso = len(self.candidatos) // self.nProcesos
+        self.solucionesPorProceso = self.nSoluciones // self.nProcesos
+        
+        for candidato in self.candidatos:
+            self.poblacionDeCandidatos += candidato[1] # poblacion de cada candidato. Se hace aqui en el multiproceso
+        self.calculadoPoblacionTotalCandidatos = True
+        self.fitnessSols = manager.Array('d',self.fitnessSols)
+        aestrella.cache = manager.dict(aestrella.cache)
+        aestrella.cacheHeuristica = manager.dict(aestrella.cacheHeuristica)
 
     def inicializarN(self,nSoluciones):
         mejorFitness = VMAX
@@ -47,47 +68,50 @@ class evolutivoTorneo(Evolutivo):
         #print("mejor fitness inicial: ",mejorFitness)
         return mejorIndividuo
 
-    def calcularFitnessSolucion(self,solucionParcial):
+    def calcularFitnessSolucion(self,solucionParcial,fitnessSols):
         final = self.candidatos[solucionParcial]
-        tiempo = 0
-        tiempoMin = VMAX
-        if (self.fitnessSols[solucionParcial] != VMAX):
-            return self.fitnessSols[solucionParcial]
+        busqueda = 0
+        if (fitnessSols[solucionParcial] != VMAX):
+            print("a")
+            return fitnessSols[solucionParcial]
 
         for inicial in self.candidatos:
-            tiempo = self.nuestraCache(inicial[0], final[0])     # inicial[1] es poblacion 
-            if tiempo < tiempoMin:
-                tiempoMin = tiempo
-            if not self.calculadoPoblacionTotalCandidatos:       # inicial[0] es identificador y final[0] es id final
+            busqueda += self.nuestraCache(inicial[0], final[0])     # inicial[1] es poblacion 
+            if not self.calculadoPoblacionTotalCandidatos:          # inicial[0] es identificador y final[0] es id final
                 self.poblacionDeCandidatos += inicial[1]
         self.calculadoPoblacionTotalCandidatos = True
-        sol = tiempoMin * self.poblacionDeCandidatos
-        self.fitnessSols[solucionParcial] = sol
+        sol = busqueda * self.poblacionDeCandidatos
+        fitnessSols[solucionParcial] = sol
         return sol
 
-    def calcularFitnessAntiguo(self,individuo):
-        suma = 0
+    def calcularFitness(self,individuo):
+        
+        #resProceso = mp.Queue()
+        resProceso = mp.Array('d', self.nProcesos)
+
+        inicial = 0
         sumaMinima = VMAX
-        for candidato in individuo:
-            suma += self.calcularFitnessSolucion(candidato)
-        re = suma/self.poblacionDeCandidatos
+        pro = [0] * self.nProcesos
+        for i in range(0,self.nProcesos):
+            pro[i] = mp.Process(target=proceso, args=(inicial,inicial+self.solucionesPorProceso,resProceso,i,individuo,self.fitnessSols))
+            pro[i].start()
+            self.calculadoPoblacionTotalCandidatos = True
+            inicial += self.solucionesPorProceso
+        for i in range(self.nProcesos):
+            pass
+            
+        for i in range(self.nProcesos):
+            pro[i].join()
+            aux = resProceso[i]
+            #print(aux)
+            if  aux < sumaMinima:
+                sumaMinima = aux
+         
+        #print(self.poblacionDeCandidatos)
+        re = sumaMinima/self.poblacionDeCandidatos
         return re
 
-    def calcularFitness(self,individuo):
-        tiempos = 0
-        for inicial in self.candidatos: #I
-            if not self.calculadoPoblacionTotalCandidatos: 
-                self.poblacionDeCandidatos += inicial[1] # inicial[1] es la poblacion de un candidato
-            tiempo = VMAX                                # inicial[0] es identificador del inicial
-            tiempoMin = VMAX
-            for final in individuo: #J
-                tiempo = self.nuestraCache(inicial[0],self.candidatos[final][0])
-                tiempoMin = min(tiempo,tiempoMin)       # si inicial = final no hacemos if pq tarda mas
-            tiempos += tiempoMin * inicial[1]
-        self.calculadoPoblacionTotalCandidatos = True
-        return tiempos/self.poblacionDeCandidatos
-
-    def seleccionGeneracion(self):                      # Seleccion por torneo 
+    def seleccionGeneracion(self):                 # Seleccion por torneo 
         padresGeneracion = [0] * len(self.poblacion)    # Cogemos los mejores entre n random:  
         for i in range(len(self.poblacion)):
             mejorFitness = VMAX     # fitness
@@ -142,8 +166,19 @@ class evolutivoTorneo(Evolutivo):
                     self.mejorIndividuo = hijos[j]
                     self.mejorFitness = fitnessHijo
 
-problema = Problema(RUTAJSON)
-aestrella = AEstrella(problema, h2)
-#nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion
-print(evolutivoTorneo(80, 8, 100, 1, aestrella, problema).genetico())
-plt.show()
+if __name__ == "__main__":
+    #nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion
+    evolutivo = evolutivoTorneo(100, 5, 50, 1, aestrella, problema,h2)
+    def proceso(inicial, final, resProceso, nproceso, indicesIndividuo, fitnessSols):
+        
+        suma = VMAX
+        sumaMinima = VMAX
+        for indice in range(inicial,final):
+            suma = evolutivo.calcularFitnessSolucion(indicesIndividuo[indice],fitnessSols)
+            if suma < sumaMinima:
+                print(nproceso," : ",suma)
+                sumaMinima = suma
+        resProceso[nproceso] = sumaMinima
+
+    print(evolutivo.genetico())
+    plt.show()

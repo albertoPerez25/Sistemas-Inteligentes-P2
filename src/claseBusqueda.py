@@ -2,7 +2,6 @@
 import math
 from clasesBasicas import Nodo
 from abc import ABC,abstractmethod
-import time
 
 class Busqueda(ABC):
     def __init__(self, problema):
