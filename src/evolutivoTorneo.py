@@ -144,6 +144,7 @@ class evolutivoTorneo(Evolutivo):
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
+random.seed()
 #nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion
 print(evolutivoTorneo(80, 8, 100, .9, aestrella, problema).genetico())
 plt.show()

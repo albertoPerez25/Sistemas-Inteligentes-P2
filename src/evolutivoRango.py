@@ -149,6 +149,7 @@ class evolutivoRango(Evolutivo):
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
+random.seed()
 #nGeneracionesMaximas, tamPoblacion , tasaMutacion
 print(evolutivoRango(80, 100, .9, aestrella, problema).genetico())
 plt.show()
