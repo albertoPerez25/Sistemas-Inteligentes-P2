@@ -123,6 +123,29 @@ class evolutivoFitness(Evolutivo):
                     hijos[1][i]=padres[0][i]
         return hijos
 
+    def cruceMascara(self, padres, indiceCruce):
+        hijos=[0]*2
+        hijos[0] = [0] * self.nSoluciones
+        hijos[1] = [0] * self.nSoluciones
+        mascara=[]
+        for a in range(self.nSoluciones):
+            mascara.append(random.randint(0,1))
+        print(mascara)
+        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce):
+            hijos[0] = padres[0]
+            hijos[1] = padres[1]
+        else: 
+            cont=0
+            for bit in mascara:
+                if bit == 0:
+                    hijos[0][cont]=padres[0][cont]
+                    hijos[1][cont]=padres[1][cont]
+                else:
+                    hijos[0][cont]=padres[1][cont]
+                    hijos[1][cont]=padres[0][cont]
+                cont=cont+1
+        return hijos
+
     def mutacion(self, hijos):
         for i in range(len(hijos)): # Dos hijos, 0 y 1
             nRandom = random.random()
@@ -132,6 +155,7 @@ class evolutivoFitness(Evolutivo):
                     indiceRandom = random.randrange(len(self.candidatos))
                 hijos[i][random.randrange(len(hijos[i]))] = indiceRandom
         return hijos
+        
     
     def reemplazar(self, hijos, i):
         for j in range(2): # 2 Hijos
