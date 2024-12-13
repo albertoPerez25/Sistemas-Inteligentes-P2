@@ -54,7 +54,7 @@ class Busqueda(ABC):
             if (not self.nodo.estado.identifier in self.cerrados):
                 self.expandir(self.nodo, self.problema)     # Obtenemos los sucesores con Expandir()
                 self.cerrados.add(self.nodo.estado.identifier)
-        return 9999
+        return 18000 #3600 * 5
 
     @abstractmethod
     def añadirNodoAFrontera(self, nodo, frontera):

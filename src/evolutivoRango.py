@@ -7,11 +7,19 @@ from evolutivoGeneral import Evolutivo, VMAX
 
 import random
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
-medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json'
-medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidates_167_ns_23.json'
+medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json' 
+medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidates_167_ns_23.json' #tarda mas
 medium3 = 'problems/medium/calle_f_albacete_2000_0_candidates_25_ns_4.json'
 
-RUTAJSON = medium2
+large1 = 'problems/large/calle_cardenal_tabera_y_araoz_albacete_1000_2_candidates_104_ns_22.json'
+large2 = 'problems/huge/calle_de_josé_carbajal_albacete_5000_2_candidates_537_ns_12.json'
+large3 = 'problems/large/calle_herreros_albacete_1000_4_candidates_496_ns_14.json'
+large4 = 'problems/large/calle_industria_albacete_1000_0_candidates_122_ns_8.json'
+large5 = 'problems/large/calle_industria_albacete_1000_2_candidates_549_ns_71.json'
+
+huge1 = 'problems/huge/calle_de_josé_carbajal_albacete_2000_2_candidates_1254_ns_110.json'
+
+RUTAJSON = large1
 
 h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
@@ -41,7 +49,9 @@ class evolutivoRango(Evolutivo):
                 mejorIndividuo = individuo
             self.poblacion[i] = individuo
             self.fitness[i] = fitnessIndividuo
-            heappush(self.rango, (fitnessIndividuo, i))
+            #heappush(self.rango, (fitnessIndividuo, i))
+            self.rango.append((fitnessIndividuo,i))
+        self.rango.sort()
         self.mejorFitness = mejorFitness
         return mejorIndividuo
 
@@ -89,14 +99,15 @@ class evolutivoRango(Evolutivo):
         padresGeneracion = [0] * len(self.poblacion)
         tam = len(self.poblacion)
         pAcumulada = 0
-        for i in range(1,tam+1):
+        for i in range(1,tam+1):                            # En la formula el primer elemento es 1, no 0
             pAcumulada += (2*(tam - i + 1)/(tam**2 + tam))
             self.ps.add(pAcumulada)
         for i in range(tam):
             aux = random.random()
             for prob in self.ps:
                 if aux <= prob:
-                    padresGeneracion[i] = heappop(self.rango)[1]
+                    #padresGeneracion[i] = heappop(self.rango)[1]
+                    padresGeneracion[i] = self.rango.pop()[1]
                     break
         if len(self.rango) != 0:
             raise Exception("No se vacia rango!")
@@ -144,7 +155,9 @@ class evolutivoRango(Evolutivo):
                     #print("Ha encontrado un mejor individuo")
                     self.mejorIndividuo = hijos[j]
                     self.mejorFitness = fitnessHijo
-            heappush(self.rango, (self.fitness[i+j], i+j))
+            #heappush(self.rango, (self.fitness[i+j], i+j))
+            self.rango.append((self.fitness[i+j], i+j))
+            self.rango.sort()
 
 
 problema = Problema(RUTAJSON)

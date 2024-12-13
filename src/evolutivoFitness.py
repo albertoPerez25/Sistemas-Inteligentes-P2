@@ -8,7 +8,8 @@ from heapq import heappush,heappop
 
 toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4.json'
 medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json'
-RUTAJSON = medium1
+medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidates_167_ns_23.json'
+RUTAJSON = medium2
 
 h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
@@ -83,16 +84,16 @@ class evolutivoFitness(Evolutivo):
     
     def seleccionGeneracion(self):   # Seleccion por fitness
         padresGeneracion = [0] * len(self.poblacion)
-        n = len(self.poblacion)
+        longPoblacion = len(self.poblacion)
         pAcumulada = 0
         fitTotal=0
-        for j in range(n):
+        for j in range(longPoblacion):
             fitTotal=fitTotal+self.lfitness[j][0]
-        for i in range(n):
-            pAcumulada += (self.lfitness[i][0]/fitTotal)    #Formula para calcular la probabilidad basada en el fitness
-            pAcumulada=1/pAcumulada
+        for i in range(longPoblacion):
+            pAcumulada += 1/(self.lfitness[i][0]/fitTotal)    #Formula para calcular la probabilidad basada en el fitness
+            #pAcumulada=1/pAcumulada
             self.ps.add(pAcumulada)
-        for i in range(n):
+        for i in range(longPoblacion):
             aux = random.random()
             for prob in self.ps:
                 if aux <= prob:
@@ -150,5 +151,5 @@ class evolutivoFitness(Evolutivo):
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
 #nGeneracionesMaximas, tamPoblacion , tasaMutacion
-print(evolutivoFitness(20, 1, .9, aestrella, problema).genetico())
+print(evolutivoFitness(80, 100, .1, aestrella, problema).genetico())
 plt.show()
