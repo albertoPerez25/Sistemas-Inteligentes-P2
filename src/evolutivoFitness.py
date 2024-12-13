@@ -20,6 +20,7 @@ class evolutivoFitness(Evolutivo):
         super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema)
         self.lfitness=[]
         self.ps=set()
+        self.fitTotal=0
     
     def inicializarN(self,nSoluciones):
         mejorFitness = VMAX
@@ -34,6 +35,7 @@ class evolutivoFitness(Evolutivo):
                 individuo[j] = index
                 # Si el individuo es mejor que el mejor de todos, lo guardamos
             fitnessIndividuo = self.calcularFitness(individuo)
+            self.fitTotal=self.fitTotal+fitnessIndividuo
             if (fitnessIndividuo < mejorFitness):
                 mejorFitness = fitnessIndividuo
                 mejorIndividuo = individuo
@@ -87,10 +89,10 @@ class evolutivoFitness(Evolutivo):
         longPoblacion = len(self.poblacion)
         pAcumulada = 0
         fitTotal=0
-        for j in range(longPoblacion):
-            fitTotal=fitTotal+self.lfitness[j][0]
+        #for j in range(longPoblacion):             Antes calculabamos aqui fitTotal pero lo pasamos a calcular fuera para ahorrar tiempo y coste
+        #    fitTotal=fitTotal+self.lfitness[j][0]
         for i in range(longPoblacion):
-            pAcumulada += 1/(self.lfitness[i][0]/fitTotal)    #Formula para calcular la probabilidad basada en el fitness
+            pAcumulada += 1/(self.lfitness[i][0]/self.fitTotal)    #Formula para calcular la probabilidad basada en el fitness
             #pAcumulada=1/pAcumulada
             self.ps.add(pAcumulada)
         for i in range(longPoblacion):
@@ -131,7 +133,6 @@ class evolutivoFitness(Evolutivo):
         mascara=[]
         for a in range(self.nSoluciones):
             mascara.append(random.randint(0,1))
-        print(mascara)
         if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce):
             hijos[0] = padres[0]
             hijos[1] = padres[1]
@@ -159,8 +160,10 @@ class evolutivoFitness(Evolutivo):
         
     
     def reemplazar(self, hijos, i):
+        self.fitTotal=0
         for j in range(2): # 2 Hijos
             fitnessHijo = self.calcularFitness(hijos[j])
+            self.fitTotal=self.fitTotal+fitnessHijo
             #print("fitness hijo ",j,": ",fitnessHijo)
             if (self.poblacion[i+j] != self.mejorIndividuo) or fitnessHijo < self.fitness[i+j]:
                 self.poblacion[i+j] = hijos[j]
