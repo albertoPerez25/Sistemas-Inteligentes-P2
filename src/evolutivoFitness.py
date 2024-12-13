@@ -2,7 +2,7 @@ from clasesBasicas import Problema
 from BusquedasInformadas import AEstrella
 from clasesHeuristica import Heuristica1,Heuristica2,Heuristica3
 import matplotlib.pyplot as plt
-from evolutivoGeneral import evolutivo, VMAX
+from evolutivoGeneral import Evolutivo, VMAX
 import random
 from heapq import heappush,heappop
 
@@ -14,7 +14,7 @@ h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
-class evolutivoFitness(evolutivo):
+class evolutivoFitness(Evolutivo):
     def __init__(self, nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema):
         super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema)
         self.lfitness=[]
@@ -38,7 +38,7 @@ class evolutivoFitness(evolutivo):
                 mejorIndividuo = individuo
             self.poblacion[i] = individuo
             self.fitness[i] = fitnessIndividuo
-            heappush(self.lfitness, fitnessIndividuo)  #Añadimos el fitnes del individuo
+            heappush(self.lfitness, (fitnessIndividuo,i))  #Añadimos el fitnes del individuo
         self.mejorFitness = mejorFitness
         return mejorIndividuo
     
@@ -57,7 +57,7 @@ class evolutivoFitness(evolutivo):
         self.fitnessSols[solucionParcial] = sol
         return sol
 
-    def calcularFitness(self,individuo):
+    def calcularFitnessAntiguo(self,individuo):
         suma = 0
         sumaMinima = VMAX
         for candidato in individuo:
@@ -67,20 +67,88 @@ class evolutivoFitness(evolutivo):
         re = sumaMinima/self.poblacionDeCandidatos
         return re
     
+    def calcularFitness(self,individuo):
+        tiempos = 0
+        for inicial in self.candidatos: #I
+            if not self.calculadoPoblacionTotalCandidatos: 
+                self.poblacionDeCandidatos += inicial[1] # inicial[1] es la poblacion de un candidato
+            tiempo = VMAX                                # inicial[0] es identificador del inicial
+            tiempoMin = VMAX
+            for final in individuo: #J
+                tiempo = self.nuestraCache(inicial[0],self.candidatos[final][0])
+                tiempoMin = min(tiempo,tiempoMin)       # si inicial = final no hacemos if pq tarda mas
+            tiempos += tiempoMin * inicial[1]
+        self.calculadoPoblacionTotalCandidatos = True
+        return tiempos/self.poblacionDeCandidatos
+    
     def seleccionGeneracion(self):   # Seleccion por fitness
         padresGeneracion = [0] * len(self.poblacion)
-        tam = len(self.poblacion)
+        n = len(self.poblacion)
         pAcumulada = 0
-        for i in range(1,tam+1):
-            pAcumulada += ()    #Formula para calcular la probabilidad basada en el fitness
+        fitTotal=0
+        for j in range(n):
+            fitTotal=fitTotal+self.lfitness[j][0]
+        for i in range(n):
+            pAcumulada += (self.lfitness[i][0]/fitTotal)    #Formula para calcular la probabilidad basada en el fitness
+            pAcumulada=1/pAcumulada
             self.ps.add(pAcumulada)
-        for i in range(tam):
+        for i in range(n):
             aux = random.random()
             for prob in self.ps:
                 if aux <= prob:
-                    padresGeneracion[i] = heappop(self.rango)[1]
+                    padresGeneracion[i] = heappop(self.lfitness)[1]
                     break
-        if len(self.rango) != 0:
-            raise Exception("No se vacia rango!")
+        if len(self.lfitness) != 0:
+            raise Exception("lfitness vacio exception")
         self.rango = []
         return padresGeneracion
+    
+    def cruce(self, padres, indiceCruce):
+        hijos = [0] * 2
+        hijos[0] = [0] * self.nSoluciones
+        hijos[1] = [0] * self.nSoluciones
+        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce):
+            hijos[0] = padres[0]
+            hijos[1] = padres[1]
+        else:   
+            for i in range(len(padres[0])):
+                if i < indiceCruce or padres[1][i] in hijos[0] :
+                    hijos[0][i]=padres[0][i]
+                else:
+                    hijos[0][i]=padres[1][i]
+
+                if i < indiceCruce or padres[0][i] in hijos[1] :
+                    hijos[1][i]=padres[1][i]
+                else:
+                    hijos[1][i]=padres[0][i]
+        return hijos
+
+    def mutacion(self, hijos):
+        for i in range(len(hijos)): # Dos hijos, 0 y 1
+            nRandom = random.random()
+            if nRandom < self.tasaMutacion:
+                indiceRandom = random.randrange(len(self.candidatos))
+                while indiceRandom in hijos[i]:
+                    indiceRandom = random.randrange(len(self.candidatos))
+                hijos[i][random.randrange(len(hijos[i]))] = indiceRandom
+        return hijos
+    
+    def reemplazar(self, hijos, i):
+        for j in range(2): # 2 Hijos
+            fitnessHijo = self.calcularFitness(hijos[j])
+            #print("fitness hijo ",j,": ",fitnessHijo)
+            if (self.poblacion[i+j] != self.mejorIndividuo) or fitnessHijo < self.fitness[i+j]:
+                self.poblacion[i+j] = hijos[j]
+                self.fitness[i+j] = fitnessHijo
+                if fitnessHijo < self.mejorFitness:
+                    #print("Ha encontrado un mejor individuo")
+                    self.mejorIndividuo = hijos[j]
+                    self.mejorFitness = fitnessHijo
+            heappush(self.lfitness, (self.fitness[i+j], i+j))
+
+
+problema = Problema(RUTAJSON)
+aestrella = AEstrella(problema, h2)
+#nGeneracionesMaximas, tamPoblacion , tasaMutacion
+print(evolutivoFitness(20, 1, .9, aestrella, problema).genetico())
+plt.show()
