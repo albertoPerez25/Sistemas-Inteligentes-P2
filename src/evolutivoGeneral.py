@@ -93,7 +93,7 @@ class Evolutivo(ABC):
                 padres[0] = self.poblacion[pGeneracion[i]]
                 padres[1] = self.poblacion[pGeneracion[i+1]]
                 #Cruce
-                hijos = self.cruceMascara(padres,(self.nSoluciones)//2)
+                hijos = self.cruce(padres,(self.nSoluciones)//2)
                 #Mutacion
                 hijos = self.mutacion(hijos)
                 #Reemplazo. Mantenemos el mejor individuo de la generacion pasada, a no ser que haya uno mejor
