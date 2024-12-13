@@ -142,7 +142,7 @@ class evolutivoTorneo(Evolutivo):
                 else:
                     hijos[0][i]=padres[1][i]
 
-                if (i > indiceCruce and i<(indiceCruce*3)) or padres[0][i] in hijos[1] :
+                if (i > indiceCruce and i<(indiceCruce*3)) or padres[0][i] in hijos[1] : # Segundo y tercer cuartos del segundo padre
                     hijos[1][i]=padres[1][i]
                 else:
                     hijos[1][i]=padres[0][i]
