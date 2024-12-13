@@ -1,4 +1,3 @@
-import math
 from clasesBasicas import Problema 
 from BusquedasInformadas import AEstrella
 from clasesHeuristica import Heuristica1,Heuristica2,Heuristica3
@@ -10,6 +9,14 @@ toy1 = 'problems/toy/calle_del_virrey_morcillo_albacete_250_3_candidates_15_ns_4
 medium1 = 'problems/medium/calle_agustina_aroca_albacete_500_1_candidates_89_ns_22.json' 
 medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidates_167_ns_23.json' #tarda mas
 medium3 = 'problems/medium/calle_f_albacete_2000_0_candidates_25_ns_4.json'
+
+large1 = 'problems/large/calle_cardenal_tabera_y_araoz_albacete_1000_2_candidates_104_ns_22.json'
+large2 = 'problems/huge/calle_de_josé_carbajal_albacete_5000_2_candidates_537_ns_12.json'
+large3 = 'problems/large/calle_herreros_albacete_1000_4_candidates_496_ns_14.json'
+large4 = 'problems/large/calle_industria_albacete_1000_0_candidates_122_ns_8.json'
+large5 = 'problems/large/calle_industria_albacete_1000_2_candidates_549_ns_71.json'
+
+huge1 = 'problems/huge/calle_de_josé_carbajal_albacete_2000_2_candidates_1254_ns_110.json'
 
 RUTAJSON = medium2
 
@@ -119,6 +126,27 @@ class evolutivoTorneo(Evolutivo):
                 else:
                     hijos[1][i]=padres[0][i]
         return hijos
+    
+    def cruce2(self, padres, indiceCruce):
+        indiceCruce = indiceCruce/2       # Cruce por dos puntos. Nos quedamos la mitad de soluciones parciales de cada padre
+        hijos = [0] * 2
+        hijos[0] = [0] * self.nSoluciones
+        hijos[1] = [0] * self.nSoluciones
+        if (len(str(padres[0]))<indiceCruce*3 and len(str(padres[1]))<indiceCruce*3):
+            hijos[0] = padres[0]
+            hijos[1] = padres[1]
+        else:   
+            for i in range(len(padres[0])):
+                if i < indiceCruce or i>(indiceCruce*3) or padres[1][i] in hijos[0] : # Primer y ultimo cuartos del primer padre
+                    hijos[0][i]=padres[0][i]
+                else:
+                    hijos[0][i]=padres[1][i]
+
+                if (i > indiceCruce and i<(indiceCruce*3)) or padres[0][i] in hijos[1] : # Segundo y tercer cuartos del segundo padre
+                    hijos[1][i]=padres[1][i]
+                else:
+                    hijos[1][i]=padres[0][i]
+        return hijos
 
     def mutacion(self, hijos):
         for i in range(len(hijos)): # Dos hijos, 0 y 1
@@ -146,5 +174,5 @@ problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
 random.seed()
 #nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion
-print(evolutivoTorneo(80, 8, 100, .9, aestrella, problema).genetico())
+print(evolutivoTorneo(80, 8, 100, .1, aestrella, problema).genetico())
 plt.show()
