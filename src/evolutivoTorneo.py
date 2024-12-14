@@ -19,7 +19,7 @@ large5 = 'problems/large/calle_industria_albacete_1000_2_candidates_549_ns_71.js
 huge1 = 'problems/huge/calle_de_josé_carbajal_albacete_2000_2_candidates_1254_ns_110.json'
 huge2 = 'problems/huge/calle_de_josé_carbajal_albacete_5000_2_candidates_537_ns_12.json'
 
-RUTAJSON = medium2
+RUTAJSON = large2
 
 h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
@@ -150,7 +150,7 @@ class evolutivoTorneo(Evolutivo):
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
-random.seed()
+random.seed(777)
 #nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion, tasaCruce
 print(evolutivoTorneo(80, 8, 100, .1, 1, aestrella, problema).genetico())
 plt.show()
