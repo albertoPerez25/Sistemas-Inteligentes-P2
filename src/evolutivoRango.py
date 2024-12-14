@@ -19,15 +19,15 @@ large5 = 'problems/large/calle_industria_albacete_1000_2_candidates_549_ns_71.js
 
 huge1 = 'problems/huge/calle_de_josé_carbajal_albacete_2000_2_candidates_1254_ns_110.json'
 
-RUTAJSON = large1
+RUTAJSON = medium2
 
 h1 = Heuristica1(Problema(RUTAJSON)) # Euclidea
 h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
 class evolutivoRango(Evolutivo):
-    def __init__(self, nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema):
-        super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema)
+    def __init__(self, nGeneracionesMaximas, tamPoblacion, tasaMutacion, tasaCruce, aestrella, problema):
+        super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, tasaCruce, aestrella, problema)
         self.rango = []
         self.ps = set()
 
@@ -51,7 +51,6 @@ class evolutivoRango(Evolutivo):
             self.fitness[i] = fitnessIndividuo
             #heappush(self.rango, (fitnessIndividuo, i))
             self.rango.append((fitnessIndividuo,i))
-        self.rango.sort()
         self.mejorFitness = mejorFitness
         return mejorIndividuo
 
@@ -95,6 +94,7 @@ class evolutivoRango(Evolutivo):
         return tiempos/self.poblacionDeCandidatos
 
     def seleccionGeneracion(self):   # Seleccion por rango
+        self.rango.sort() #Ordenamos los fitnesses para la formula del rango
         self.ps = set()
         padresGeneracion = [0] * len(self.poblacion)
         tam = len(self.poblacion)
@@ -118,7 +118,8 @@ class evolutivoRango(Evolutivo):
         hijos = [0] * 2
         hijos[0] = [0] * self.nSoluciones
         hijos[1] = [0] * self.nSoluciones
-        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce):
+        nRandom = random.random()
+        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce or nRandom>self.tasaCruce):
             hijos[0] = padres[0]
             hijos[1] = padres[1]
         else:   
@@ -157,12 +158,12 @@ class evolutivoRango(Evolutivo):
                     self.mejorFitness = fitnessHijo
             #heappush(self.rango, (self.fitness[i+j], i+j))
             self.rango.append((self.fitness[i+j], i+j))
-            self.rango.sort()
+            
 
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
 random.seed()
-#nGeneracionesMaximas, tamPoblacion , tasaMutacion
-print(evolutivoRango(80, 100, .9, aestrella, problema).genetico())
+#nGeneracionesMaximas, tamPoblacion , tasaMutacion, tasaCruce
+print(evolutivoRango(80, 100, .1, 1, aestrella, problema).genetico())
 plt.show()

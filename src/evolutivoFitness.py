@@ -16,8 +16,8 @@ h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
 class evolutivoFitness(Evolutivo):
-    def __init__(self, nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema):
-        super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema)
+    def __init__(self, nGeneracionesMaximas, tamPoblacion, tasaMutacion, tasaCruce, aestrella, problema):
+        super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, tasaCruce, aestrella, problema)
         self.lfitness=[]
         self.ps=set()
         self.fitTotal=0
@@ -41,7 +41,8 @@ class evolutivoFitness(Evolutivo):
                 mejorIndividuo = individuo
             self.poblacion[i] = individuo
             self.fitness[i] = fitnessIndividuo
-            heappush(self.lfitness, (fitnessIndividuo,i))  #Añadimos el fitnes del individuo
+            #heappush(self.lfitness, (fitnessIndividuo,i))  #Añadimos el fitnes del individuo
+            self.lfitness.append((fitnessIndividuo,i))     #Añadimos el fitnes del individuo
         self.mejorFitness = mejorFitness
         return mejorIndividuo
     
@@ -85,6 +86,7 @@ class evolutivoFitness(Evolutivo):
         return tiempos/self.poblacionDeCandidatos
     
     def seleccionGeneracion(self):   # Seleccion por fitness
+        self.lfitness.sort() #Ordenamos los fitnesses para la formula del fitness
         padresGeneracion = [0] * len(self.poblacion)
         longPoblacion = len(self.poblacion)
         pAcumulada = 0
@@ -99,18 +101,20 @@ class evolutivoFitness(Evolutivo):
             aux = random.random()
             for prob in self.ps:
                 if aux <= prob:
-                    padresGeneracion[i] = heappop(self.lfitness)[1]
+                    #padresGeneracion[i] = heappop(self.lfitness)[1]
+                    padresGeneracion[i] = self.lfitness.pop()[1]
                     break
         if len(self.lfitness) != 0:
             raise Exception("lfitness vacio exception")
-        self.rango = []
+        self.lfitness = []
         return padresGeneracion
     
     def cruce(self, padres, indiceCruce):
         hijos = [0] * 2
         hijos[0] = [0] * self.nSoluciones
         hijos[1] = [0] * self.nSoluciones
-        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce):
+        nRandom = random.random()
+        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce or nRandom>self.tasaCruce):
             hijos[0] = padres[0]
             hijos[1] = padres[1]
         else:   
@@ -131,9 +135,10 @@ class evolutivoFitness(Evolutivo):
         hijos[0] = [0] * self.nSoluciones
         hijos[1] = [0] * self.nSoluciones
         mascara=[]
-        for a in range(self.nSoluciones):
+        nRandom = random.random()
+        for _ in range(self.nSoluciones):
             mascara.append(random.randint(0,1))
-        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce):
+        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce or nRandom>self.tasaCruce):
             hijos[0] = padres[0]
             hijos[1] = padres[1]
         else: 
@@ -163,7 +168,6 @@ class evolutivoFitness(Evolutivo):
         self.fitTotal=0
         for j in range(2): # 2 Hijos
             fitnessHijo = self.calcularFitness(hijos[j])
-            self.fitTotal=self.fitTotal+fitnessHijo
             #print("fitness hijo ",j,": ",fitnessHijo)
             if (self.poblacion[i+j] != self.mejorIndividuo) or fitnessHijo < self.fitness[i+j]:
                 self.poblacion[i+j] = hijos[j]
@@ -172,11 +176,13 @@ class evolutivoFitness(Evolutivo):
                     #print("Ha encontrado un mejor individuo")
                     self.mejorIndividuo = hijos[j]
                     self.mejorFitness = fitnessHijo
-            heappush(self.lfitness, (self.fitness[i+j], i+j))
+            #heappush(self.lfitness, (self.fitness[i+j], i+j))
+            self.lfitness.append((self.fitness[i+j], i+j))
+            self.fitTotal=self.fitTotal+self.fitness[i+j]
 
 
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
-#nGeneracionesMaximas, tamPoblacion , tasaMutacion
-print(evolutivoFitness(80, 100, .1, aestrella, problema).genetico())
+#nGeneracionesMaximas, tamPoblacion , tasaMutacion, tasaCruce
+print(evolutivoFitness(80, 100, .1, 1, aestrella, problema).genetico())
 plt.show()

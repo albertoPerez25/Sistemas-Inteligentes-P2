@@ -10,7 +10,7 @@ cache = {}
 
 
 class Evolutivo(ABC):
-    def __init__(self, nGeneracionesMaximas, tamPoblacion , tasaMutacion,aestrella, problema):
+    def __init__(self, nGeneracionesMaximas, tamPoblacion , tasaMutacion, tasaCruce, aestrella, problema):
         self.candidatos = problema.candidatos
         self.nSoluciones = problema.number_stations
         if tamPoblacion != None:
@@ -27,6 +27,7 @@ class Evolutivo(ABC):
         self.aestrella = aestrella
         self.problema = problema
         self.tasaMutacion = tasaMutacion
+        self.tasaCruce = tasaCruce
         self.padres = []
         self.nGeneracionesMaximas = nGeneracionesMaximas
         self.tInicio = 0
@@ -55,9 +56,6 @@ class Evolutivo(ABC):
     def inicializarN(self,nSoluciones):
         pass
     @abstractmethod
-    def calcularFitnessSolucion(self,solucionParcial):
-        pass
-    @abstractmethod
     def calcularFitness(self,individuo):
         pass
     @abstractmethod
@@ -65,9 +63,6 @@ class Evolutivo(ABC):
         pass
     @abstractmethod
     def cruce(self, padres, indiceCruce):
-        pass
-    @abstractmethod
-    def cruceMascara(self, padres, indiceCruce):
         pass
     @abstractmethod
     def mutacion(self, hijos):

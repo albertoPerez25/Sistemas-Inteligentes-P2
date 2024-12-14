@@ -11,12 +11,13 @@ medium2 = 'problems/medium/calle_palmas_de_gran_canaria_albacete_500_2_candidate
 medium3 = 'problems/medium/calle_f_albacete_2000_0_candidates_25_ns_4.json'
 
 large1 = 'problems/large/calle_cardenal_tabera_y_araoz_albacete_1000_2_candidates_104_ns_22.json'
-large2 = 'problems/huge/calle_de_josé_carbajal_albacete_5000_2_candidates_537_ns_12.json'
+large2 = 'problems/large/calle_del_virrey_morcillo_albacete_1000_1_candidates_598_ns_99.json'
 large3 = 'problems/large/calle_herreros_albacete_1000_4_candidates_496_ns_14.json'
 large4 = 'problems/large/calle_industria_albacete_1000_0_candidates_122_ns_8.json'
 large5 = 'problems/large/calle_industria_albacete_1000_2_candidates_549_ns_71.json'
 
 huge1 = 'problems/huge/calle_de_josé_carbajal_albacete_2000_2_candidates_1254_ns_110.json'
+huge2 = 'problems/huge/calle_de_josé_carbajal_albacete_5000_2_candidates_537_ns_12.json'
 
 RUTAJSON = medium2
 
@@ -25,8 +26,8 @@ h2 = Heuristica2(Problema(RUTAJSON)) # Geodesica
 h3 = Heuristica3(Problema(RUTAJSON)) # Manhattan
 
 class evolutivoTorneo(Evolutivo):
-    def __init__(self, nGeneracionesMaximas, tamTorneo, tamPoblacion, tasaMutacion, aestrella, problema):
-        super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, aestrella, problema)
+    def __init__(self, nGeneracionesMaximas, tamTorneo, tamPoblacion, tasaMutacion, tasaCruce, aestrella, problema):
+        super().__init__(nGeneracionesMaximas, tamPoblacion, tasaMutacion, tasaCruce, aestrella, problema)
         self.tamTorneo = tamTorneo
 
     def inicializarN(self,nSoluciones):
@@ -53,32 +54,6 @@ class evolutivoTorneo(Evolutivo):
         self.mejorFitness = mejorFitness
         #print("mejor fitness inicial: ",mejorFitness)
         return mejorIndividuo
-
-    def calcularFitnessSolucion(self,solucionParcial):
-        final = self.candidatos[solucionParcial]
-        tiempo = 0
-        tiempoMin = VMAX
-        if (self.fitnessSols[solucionParcial] != VMAX):
-            return self.fitnessSols[solucionParcial]
-
-        for inicial in self.candidatos:
-            tiempo = self.nuestraCache(inicial[0], final[0])     # inicial[1] es poblacion 
-            if tiempo < tiempoMin:
-                tiempoMin = tiempo
-            if not self.calculadoPoblacionTotalCandidatos:       # inicial[0] es identificador y final[0] es id final
-                self.poblacionDeCandidatos += inicial[1]
-        self.calculadoPoblacionTotalCandidatos = True
-        sol = tiempoMin * self.poblacionDeCandidatos
-        self.fitnessSols[solucionParcial] = sol
-        return sol
-
-    def calcularFitnessAntiguo(self,individuo):
-        suma = 0
-        sumaMinima = VMAX
-        for candidato in individuo:
-            suma += self.calcularFitnessSolucion(candidato)
-        re = suma/self.poblacionDeCandidatos
-        return re
 
     def calcularFitness(self,individuo):
         tiempos = 0
@@ -111,7 +86,8 @@ class evolutivoTorneo(Evolutivo):
         hijos = [0] * 2
         hijos[0] = [0] * self.nSoluciones
         hijos[1] = [0] * self.nSoluciones
-        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce):
+        nRandom = random.random()
+        if (len(str(padres[0]))<indiceCruce and len(str(padres[1]))<indiceCruce or nRandom>self.tasaCruce):
             hijos[0] = padres[0]
             hijos[1] = padres[1]
         else:   
@@ -129,20 +105,22 @@ class evolutivoTorneo(Evolutivo):
     
     def cruce2(self, padres, indiceCruce):
         indiceCruce = indiceCruce/2       # Cruce por dos puntos. Nos quedamos la mitad de soluciones parciales de cada padre
+        indiceCruce2 = indiceCruce*3
         hijos = [0] * 2
         hijos[0] = [0] * self.nSoluciones
         hijos[1] = [0] * self.nSoluciones
-        if (len(str(padres[0]))<indiceCruce*3 and len(str(padres[1]))<indiceCruce*3):
+        nRandom = random.random()
+        if (len(str(padres[0]))<indiceCruce2 and len(str(padres[1]))<indiceCruce2 or nRandom>self.tasaCruce):
             hijos[0] = padres[0]
             hijos[1] = padres[1]
         else:   
             for i in range(len(padres[0])):
-                if i < indiceCruce or i>(indiceCruce*3) or padres[1][i] in hijos[0] : # Primer y ultimo cuartos del primer padre
+                if i < indiceCruce or i > indiceCruce2 or padres[1][i] in hijos[0] : # Primer y ultimo cuartos del primer padre
                     hijos[0][i]=padres[0][i]
                 else:
                     hijos[0][i]=padres[1][i]
 
-                if (i > indiceCruce and i<(indiceCruce*3)) or padres[0][i] in hijos[1] : # Segundo y tercer cuartos del segundo padre
+                if (i > indiceCruce and i < indiceCruce2) or padres[0][i] in hijos[1] : # Segundo y tercer cuartos del segundo padre
                     hijos[1][i]=padres[1][i]
                 else:
                     hijos[1][i]=padres[0][i]
@@ -173,6 +151,6 @@ class evolutivoTorneo(Evolutivo):
 problema = Problema(RUTAJSON)
 aestrella = AEstrella(problema, h2)
 random.seed()
-#nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion
-print(evolutivoTorneo(80, 8, 100, .1, aestrella, problema).genetico())
+#nGeneracionesMaximas, tamTorneo, tamPoblacion , tasaMutacion, tasaCruce
+print(evolutivoTorneo(80, 8, 100, .1, 1, aestrella, problema).genetico())
 plt.show()

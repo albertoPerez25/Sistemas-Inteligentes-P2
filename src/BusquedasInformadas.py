@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
 from claseBusqueda import Busqueda
-from queue import PriorityQueue # Para la PriorityQueue
 from heapq import heappush, heappop # Para la PriorityQueue
 # https://docs.python.org/3/library/queue.html#queue.PriorityQueue
 

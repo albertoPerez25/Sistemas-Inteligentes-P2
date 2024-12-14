@@ -2,7 +2,6 @@
 #ALBERTO PEREZ ALVAREZ
 #MARCOS LOPEZ GOMEZ
 import json
-from queue import PriorityQueue
 
 
 #Interseccion:
@@ -42,16 +41,6 @@ class Accion:
     def __lt__(self, otro):
         return self.destination < otro.destination
     
-
-class Candidato:
-    def __init__(self, identifier, population):
-        self.identifier = identifier
-        self.population = population
-    def __str__(self):
-        return f"Candidato: id={self.identifier}"
-    def __repr__(self):
-        return f"{self.identifier}"
-    
 class Problema:   
     #Constructor de Problema
     def __init__(self,ruta):
@@ -70,11 +59,9 @@ class Problema:
             self.dic_estados.update({inter['identifier']:(Estado(inter['identifier'], inter['latitude'], inter['longitude']))})         
             self.dic_acciones.update({inter['identifier']:[]})  # Acciones = {id:Lista de Acciones}
             #editar
+
         #QUITAMOS INICIAL Y FINAL YO NO ESTAN EN EL JSON
-        # Cargamos los nodos iniciales y finales del JSON.
-        #self.Inicial = self.dic_estados[self.data["initial"]]
-        #self.Final = self.dic_estados[self.data["final"]]
-        
+
         # Pasamos los segmentos del JSON a un nuevo diccionario acciones   
         segOrd = self.data['segments']; #Ordenamos la  
         for seg in segOrd:
@@ -87,10 +74,6 @@ class Problema:
         for id in self.dic_acciones:
             self.dic_acciones[id].sort(key=lambda x: x.destination)
 
-        # Pasamos los candidatos del JSON a un nuevo diccionario candidatos  
-        for cand in self.data['candidates']:
-            self.dic_candidatos.append(Candidato(cand[0], cand[1]))
-            #self.dic_candidatos.update({cand[0]:(Candidato(cand[0], cand[1]))})
 
     # Obtener un objeto Estado a partir de su ID
     def getEstado(self, id):
