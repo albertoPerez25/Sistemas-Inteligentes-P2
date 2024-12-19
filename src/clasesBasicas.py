@@ -2,7 +2,6 @@
 #ALBERTO PEREZ ALVAREZ
 #MARCOS LOPEZ GOMEZ
 import json
-from queue import PriorityQueue
 
 
 #Interseccion:
@@ -51,22 +50,30 @@ class Problema:
         self.dic_estados = {}
         self.dic_acciones = {}
         self.maxSpeed = 0
+        self.dic_candidatos = []
+        self.candidatos = self.data['candidates']
+        self.number_stations = self.data['number_stations']
 
         # Pasamos las intersecciones del JSON a un nuevo diccionario estados
         for inter in self.data['intersections']:
             self.dic_estados.update({inter['identifier']:(Estado(inter['identifier'], inter['latitude'], inter['longitude']))})         
-            self.dic_acciones.update({inter['identifier']:PriorityQueue()})  # Acciones = {id:PriorityQueue de Acciones}
-            
-        # Cargamos los nodos iniciales y finales del JSON.
-        self.Inicial = self.dic_estados[self.data["initial"]]
-        self.Final = self.dic_estados[self.data["final"]]
-        
-        # Pasamos los segmentos del JSON a un nuevo diccionario acciones     
-        for seg in self.data['segments']:
+            self.dic_acciones.update({inter['identifier']:[]})  # Acciones = {id:Lista de Acciones}
+            #editar
+
+        #QUITAMOS INICIAL Y FINAL YO NO ESTAN EN EL JSON
+
+        # Pasamos los segmentos del JSON a un nuevo diccionario acciones   
+        segOrd = self.data['segments']; #Ordenamos la  
+        for seg in segOrd:
             if (seg['speed']*(10/36) > self.maxSpeed):
                 self.maxSpeed = seg['speed']*(10/36) # km/h -> m/s
             accion=Accion(seg['origin'], seg['destination'], seg['distance'], seg['speed'])
-            self.dic_acciones[seg['origin']].put(accion)  # Metemos las acciones de cada Estado en una PriorityQueue
+            self.dic_acciones[seg['origin']].append(accion)  # Metemos las acciones de cada Estado en una lista ordenada
+
+        # Ordenamos las acciones de cada estado
+        for id in self.dic_acciones:
+            self.dic_acciones[id].sort(key=lambda x: x.destination)
+
 
     # Obtener un objeto Estado a partir de su ID
     def getEstado(self, id):
@@ -93,6 +100,6 @@ class Nodo:
     def __eq__(self,otro):
         if not isinstance(otro, Nodo):
             return False
-        return self.estado.__eq__(otro.estado) and self.nGenerado.__eq__(otro.nGenerado)
+        return self.estado==(otro.estado) and self.nGenerado.__eq__(otro.nGenerado)
     def __lt__(self,otro):
-        return self.estado.__lt__(otro.estado)
+        return self.estado<(otro.estado)

@@ -15,8 +15,8 @@ class Heuristica(ABC):
         return distancia/self.problema.maxSpeed # D->m V->m/s T->s
     
     # Metodo al que llamamos para calcular la heurística.
-    def heuristica(self, nodo):
-        return self.tiempo(self.distancia(nodo.estado,self.problema.Final))
+    def heuristica(self, nodo, final):
+        return self.tiempo(self.distancia(nodo.estado,final))
     
 # Dos maneras de hacer heuristicas calculando distancias
 class Heuristica1(Heuristica):

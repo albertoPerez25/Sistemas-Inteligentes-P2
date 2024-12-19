@@ -1,0 +1,26 @@
+- Candidatas en problema
+- ALEATORIO:
+- Escoge n (4) random de esas candidatas
+- Evaluamos cada solucion con la formula, y almacenamos en un cache por si se repiten (diccionario). Se puede usar la cache para precomputar todas las soluciones
+- Devolvemos la mejor de esas n (4) elegidas
+
+
+PROBLEMA:
+-Hacer ademas de accion y segmento, candidato, con id y poblacion
+
+-se pueden guardar tb soluciones parciales
+    -conjunto candidatas, extra para estos casos
+
+
+
+INDIVIDUOS: El numero de indice en la lista de estaciones candidatas.
+            Podemos tener otras dos listas con el mismo n de elementos.
+                -Soluciones_candidatas: Con un 1 o 0 dependiendo de si son sols o no.
+                -Fitness/Evaluacion: Con su evaluacion
+            Asi las accedemos mediante el indice, que es el individuo y nos devuelven 
+            sus datos.
+
+GENOMA/LO QUE MUTAMOS: El numero de indice.
+
+SELECCION DE PADRES: La ruleta aleatoria y elegir los 2 mejores que salgan
+REEMPLAZO DE POBLACION: Quito N peores y pongo N mejores
