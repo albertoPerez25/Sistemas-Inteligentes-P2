@@ -1,5 +1,4 @@
-# Sistemas-Inteligentes-P2
-Parte 2 de la practidca de Sistemas Inteligentes
+# Sistemas-Inteligentes-P2 - Algoritmos Genéticos
+Practica 2 de Sistemas Inteligentes
 
-NUEVA FORMULA EVALUACION:
-value(s) = (1/sum(c[i].pop)) * sum(c[i].pop * min(time(c[i],s[j]))
+Algoritmo genético implementando A* de manera eficiente para encontrar las mejores posiciones de paradas de bus en Albacete.
